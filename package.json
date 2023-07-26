@@ -1,0 +1,26 @@
+{
+  "name": "@blogfolio/types",
+  "version": "0.0.1",
+  "exports": {
+    ".": "./build/index.js"
+  },
+  "types": "build/index.d.ts",
+  "repository": "git@github.com:KhaledElmorsy/blogfolio-types.git",
+  "author": "Khaled Elmorsy <96543794+kha-ld@users.noreply.github.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "yarn tsc",
+    "lint": "yarn eslint \"src/**\" --fix",
+    "prep": "yarn lint; yarn build"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^7.32.0 || ^8.2.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-plugin-import": "^2.25.2",
+    "typescript": "^5.1.6"
+  },
+  "peerDependencies": {}
+}
