@@ -16,6 +16,10 @@
     "no-underscore-dangle": "off",
     "@typescript-eslint/comma-dangle": "off",
     "max-len": [1, { "code": 80 }],
-    "import/prefer-default-export": "warn"
+    "import/extensions": "off",
+    "import/prefer-default-export": "warn",
+    "object-curly-newline": "off",
+    "implicit-arrow-linebreak": "off",
+    "function-paren-newline": "off"
   }
 }
