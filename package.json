@@ -9,8 +9,10 @@
   "author": "Khaled Elmorsy <96543794+kha-ld@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "build": "yarn tsc",
-    "lint": "yarn eslint \"src/**\" --fix",
+    "clean": "node ./scripts/clean.js",
+    "build": "tsc -p tsconfig.prod.json",
+    "clean-build": "yarn clean && yarn build",
+    "lint": "eslint \"src/**\" --fix",
     "prepare": "ts-patch install -s; yarn lint; yarn build"
   },
   "devDependencies": {
