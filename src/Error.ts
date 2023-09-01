@@ -1,3 +1,5 @@
+import UserError from './User/Error';
+import { Errors as QueryArrayError } from './util/schema/queryArray';
 import type { UnionToIntersection } from './util/types';
 
 export enum GeneralError {
@@ -8,6 +10,10 @@ export enum GeneralError {
 
 const Error = {
   General: GeneralError,
+  User: UserError,
+  Request: {
+    QueryArray: QueryArrayError,
+  },
 };
 
 export default Error;
