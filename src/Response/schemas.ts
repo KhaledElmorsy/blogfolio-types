@@ -8,6 +8,13 @@ import {
 import { ErrorMessage } from '@/Error';
 import { ErrorCode, SuccessCode } from './status-codes';
 
+export function zSuccessResponse<T extends SuccessCode>(
+  code: T
+): z.ZodType<SuccessResponse<T>>;
+export function zSuccessResponse<T extends SuccessCode, D extends z.ZodTypeAny>(
+  code: T,
+  data: D
+): z.ZodType<SuccessResponse<T, z.infer<D>>>;
 export function zSuccessResponse<T extends SuccessCode, D extends z.ZodTypeAny>(
   code: T,
   data?: D
@@ -18,9 +25,14 @@ export function zSuccessResponse<T extends SuccessCode, D extends z.ZodTypeAny>(
       status: z.literal(ResponseBodyStatus.success),
       data: data ?? z.undefined(),
     }),
-  }) as z.ZodType<SuccessResponse<T, z.infer<D>>>;
+  }) as any;
 }
 
+export function zError<T extends ErrorMessage>(message: T): z.ZodType<Error<T>>;
+export function zError<T extends ErrorMessage, D extends z.ZodTypeAny>(
+  message: T,
+  detail: D
+): z.ZodType<Error<T, z.infer<D>>>;
 export function zError<T extends ErrorMessage, D extends z.ZodTypeAny>(
   message: T,
   detail?: D
@@ -28,7 +40,7 @@ export function zError<T extends ErrorMessage, D extends z.ZodTypeAny>(
   return z.object({
     message: z.literal(message),
     detail: detail ?? z.undefined(),
-  }) as z.ZodType<Error<T, z.infer<D>>>;
+  }) as any;
 }
 
 export function zErrorResponse<

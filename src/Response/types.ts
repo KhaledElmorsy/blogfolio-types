@@ -8,23 +8,24 @@ export enum ResponseBodyStatus {
 
 export interface SuccessResponse<
   S extends SuccessCode,
-  D extends object | undefined
+  D extends object | undefined = undefined
 > {
   status: S;
   body: {
     status: ResponseBodyStatus.success;
-    data?: D;
-  };
+  } & (D extends undefined ? {} : { data: D });
 }
 
-export interface Error<M extends ErrorMessage, T> {
+export type Error<
+  M extends ErrorMessage,
+  T extends object | undefined = undefined
+> = {
   message: M;
-  detail?: T;
-}
+} & (T extends undefined ? {} : { detail: T });
 
 export interface ErrorResponse<
   S extends ErrorCode,
-  T extends Error<ErrorMessage, unknown>[]
+  T extends Error<ErrorMessage, object | undefined>[]
 > {
   status: S;
   body: {
@@ -33,9 +34,6 @@ export interface ErrorResponse<
   };
 }
 
-export type Response<
-  R extends (
-    | SuccessResponse<SuccessCode, object | undefined>
-    | ErrorResponse<ErrorCode, Error<ErrorMessage, unknown>[]>
-  )[]
-> = R[number];
+export type Response =
+  | SuccessResponse<SuccessCode, object | undefined>
+  | ErrorResponse<ErrorCode, Error<ErrorMessage, object | undefined>[]>;

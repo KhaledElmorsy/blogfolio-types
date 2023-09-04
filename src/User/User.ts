@@ -1,10 +1,6 @@
 import { z } from 'zod';
 import { queryArray } from '../util/schema';
-import type {
-  InferEndpointRecord,
-  InferZodRecord,
-  EndpointRecord,
-} from '../util/types';
+import type { InferZodRecord } from '../util/types';
 import {
   ErrorCode,
   SuccessCode,
@@ -13,6 +9,11 @@ import {
   zSuccessResponse,
 } from '@/Response';
 import Error from '@/Error';
+import type {
+  Controller,
+  ControllerSchema,
+  InferController,
+} from '@/Controller';
 
 /* ===================================================== */
 /*                    COMPONENTS                         */
@@ -151,16 +152,25 @@ const resUtil = {
 
 const response = {
   success: {
-    foundUser: zSuccessResponse(SuccessCode.Ok, z.array(QueriedUser).length(1)),
-    foundUsers: zSuccessResponse(SuccessCode.Ok, z.array(QueriedUser)),
-    boolean: zSuccessResponse(SuccessCode.Ok, z.boolean()),
+    foundUser: zSuccessResponse(
+      SuccessCode.Ok,
+      z.object({ user: QueriedUser })
+    ),
+    foundUsers: zSuccessResponse(
+      SuccessCode.Ok,
+      z.object({ users: z.array(QueriedUser) })
+    ),
+    boolean: zSuccessResponse(
+      SuccessCode.Ok,
+      z.object({ result: z.boolean() })
+    ),
     userDataUpdated: zSuccessResponse(SuccessCode.Ok, Id),
     userCreated: zSuccessResponse(SuccessCode.Created, Id),
     followerAdded: zSuccessResponse(
       SuccessCode.Ok,
       z.object({
-        target: Id.shape.id,
-        follower: Id.shape.id,
+        target: Id,
+        follower: Id,
       })
     ),
     userActivated: zSuccessResponse(SuccessCode.Ok, Id),
@@ -168,8 +178,8 @@ const response = {
     followerRemoved: zSuccessResponse(
       SuccessCode.Ok,
       z.object({
-        target: Id.shape.id,
-        follower: Id.shape.id,
+        target: Id,
+        follower: Id,
       })
     ),
   },
@@ -229,8 +239,8 @@ const response = {
       zError(
         Error.User.AlreadyFollowing,
         z.object({
-          target: Id.shape.id,
-          follower: Id.shape.id,
+          target: Id,
+          follower: Id,
         })
       ),
     ]),
@@ -245,8 +255,8 @@ const response = {
       zError(
         Error.User.NotFollowing,
         z.object({
-          target: Id.shape.id,
-          follower: Id.shape.id,
+          target: Id,
+          follower: Id,
         })
       ),
     ]),
@@ -258,7 +268,6 @@ const responseGroup = {
     response.success.foundUsers,
     response.error.userIdNotFound,
     response.error.generalInvalidRequest,
-
   ]),
   updateUserData: z.union([
     response.success.userDataUpdated,
@@ -431,7 +440,7 @@ export const endPoints = {
   Put: {
     request: z.object({
       params: Id,
-      body: Misc,
+      body: Misc.partial(),
     }),
     response: responseGroup.updateUserData,
   },
@@ -557,6 +566,6 @@ export const endPoints = {
       response.error.userIdNotFound,
     ]),
   },
-} satisfies EndpointRecord;
+} satisfies ControllerSchema<Controller>;
 
-export type Endpoints = InferEndpointRecord<typeof endPoints>;
+export type Endpoints = InferController<typeof endPoints>;

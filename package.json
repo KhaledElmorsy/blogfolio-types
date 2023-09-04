@@ -3,8 +3,10 @@
   "version": "0.0.3",
   "exports": {
     ".": "./build/index.js",
+    "./Error": "./build/Error.js",
     "./User": "./build/User/index.js",
-    "./Errors": "./build/Errors.js",
+    "./Endpoint": "./build/Endpoint.js",
+    "./Controller": "./build/Controller.js",
     "./Response": "./build/Response/index.js"
   },
   "types": "build/index.d.ts",
