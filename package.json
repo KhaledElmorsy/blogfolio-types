@@ -1,6 +1,6 @@
 {
   "name": "@blogfolio/types",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "exports": {
     ".": "./build/index.js",
     "./Error": "./build/Error.js",
