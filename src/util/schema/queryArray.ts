@@ -29,7 +29,7 @@ interface Options<O, S extends string | undefined> {
   allowedSubValues?: S[] | Readonly<S[]>;
 }
 
-export enum Errors {
+export enum ErrorMessage {
   InvalidFormat = 'Invalid array format',
   Duplicate = 'Duplicates not allowed',
   InvalidValue = 'Invalid array value',
@@ -70,7 +70,7 @@ function queryArray<T extends string, S extends string>(
 
   return z
     .string()
-    .regex(regex, Errors.InvalidFormat)
+    .regex(regex, ErrorMessage.InvalidFormat)
     .transform((str, ctx) => {
       const elementSet: Set<T> = new Set();
       const elements: any[] = [];
@@ -79,7 +79,7 @@ function queryArray<T extends string, S extends string>(
         if (unique && inSet(elementSet, key)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: Errors.Duplicate,
+            message: ErrorMessage.Duplicate,
             path: [key],
           });
           return;
@@ -87,7 +87,7 @@ function queryArray<T extends string, S extends string>(
         if (allowedSet.size && !inSet(allowedSet, key)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: Errors.InvalidValue,
+            message: ErrorMessage.InvalidValue,
             path: [element],
           });
           return;
@@ -96,7 +96,7 @@ function queryArray<T extends string, S extends string>(
           if (allowedSubValueSet.size && !inSet(allowedSubValueSet, value)) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: Errors.InvalidValue,
+              message: ErrorMessage.InvalidValue,
               path: [`${key}: [${value}]`],
             });
             return;

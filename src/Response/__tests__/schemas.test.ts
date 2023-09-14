@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { describe, it, expect } from 'vitest';
-import { zSuccessResponse, zError, zErrorResponse } from '../schemas';
+import { zSuccessResponse, zResponseError, zFailureResponse } from '../schemas';
 import { ResponseBodyStatus } from '../types';
 
 const TestEnum = {
@@ -100,12 +100,12 @@ describe('zSuccessResponse()', () => {
   });
 });
 
-describe('zError()', () => {
+describe('zResponseError()', () => {
   it.each([
     [
       'Correct error message',
       {
-        schema: zError(TestEnum.Test),
+        schema: zResponseError(TestEnum.Test),
         error: {
           message: TestEnum.Test,
         },
@@ -114,7 +114,7 @@ describe('zError()', () => {
     [
       'Correct "detail" field type',
       {
-        schema: zError(TestEnum.Test, z.string()),
+        schema: zResponseError(TestEnum.Test, z.string()),
         error: {
           message: TestEnum.Test,
           detail: 'nice',
@@ -129,7 +129,7 @@ describe('zError()', () => {
     [
       'Wrong error message',
       {
-        schema: zError(TestEnum.Test),
+        schema: zResponseError(TestEnum.Test),
         error: {
           message: TestEnum.Test2,
         },
@@ -138,7 +138,7 @@ describe('zError()', () => {
     [
       'Wrong "detail" field type',
       {
-        schema: zError(TestEnum.Test, z.string()),
+        schema: zResponseError(TestEnum.Test, z.string()),
         error: {
           message: TestEnum.Test,
           detail: 0,
@@ -148,7 +148,7 @@ describe('zError()', () => {
     [
       'Has "detail" field when not defined in the schema',
       {
-        schema: zError(TestEnum.Test),
+        schema: zResponseError(TestEnum.Test),
         error: {
           message: TestEnum.Test,
           detail: {},
@@ -158,7 +158,7 @@ describe('zError()', () => {
     [
       'Missing "detail" field',
       {
-        schema: zError(TestEnum.Test, z.number()),
+        schema: zResponseError(TestEnum.Test, z.number()),
         error: {
           message: TestEnum.Test,
         },
@@ -169,7 +169,7 @@ describe('zError()', () => {
   });
 });
 
-describe('zErrorResponse():', () => {
+describe('zFailureResponse():', () => {
   const defaultBody = {
     status: ResponseBodyStatus.failure,
     errors: [],
@@ -179,7 +179,7 @@ describe('zErrorResponse():', () => {
     [
       'Correct error code',
       {
-        schema: zErrorResponse(TestEnum.Test),
+        schema: zFailureResponse(TestEnum.Test),
         response: {
           status: TestEnum.Test,
           body: defaultBody,
@@ -189,7 +189,7 @@ describe('zErrorResponse():', () => {
     [
       'Correct -required- error(s)',
       {
-        schema: zErrorResponse(
+        schema: zFailureResponse(
           TestEnum.Test,
           [z.literal('yes'), z.literal('good')],
           { errorRequired: true }
@@ -206,7 +206,7 @@ describe('zErrorResponse():', () => {
     [
       'Correct -optional- errors',
       {
-        schema: zErrorResponse(TestEnum.Test, [z.literal('?')], {
+        schema: zFailureResponse(TestEnum.Test, [z.literal('?')], {
           errorRequired: false,
         }),
         response: {
@@ -223,7 +223,7 @@ describe('zErrorResponse():', () => {
     [
       'Wrong error code',
       {
-        schema: zErrorResponse(TestEnum.Test),
+        schema: zFailureResponse(TestEnum.Test),
         response: {
           status: TestEnum.Test2,
           body: defaultBody,
@@ -233,7 +233,7 @@ describe('zErrorResponse():', () => {
     [
       'Wrong response body status',
       {
-        schema: zErrorResponse(TestEnum.Test),
+        schema: zFailureResponse(TestEnum.Test),
         response: {
           status: TestEnum.Test,
           body: { ...defaultBody, status: ResponseBodyStatus.success },
@@ -243,7 +243,7 @@ describe('zErrorResponse():', () => {
     [
       'Missing errors array',
       {
-        schema: zErrorResponse(TestEnum.Test),
+        schema: zFailureResponse(TestEnum.Test),
         response: {
           status: TestEnum.Test,
           body: {
@@ -255,7 +255,7 @@ describe('zErrorResponse():', () => {
     [
       'Invalid error types',
       {
-        schema: zErrorResponse(TestEnum.Test, [z.literal('oof')]),
+        schema: zFailureResponse(TestEnum.Test, [z.literal('oof')]),
         response: {
           status: TestEnum.Test,
           body: {
@@ -268,7 +268,7 @@ describe('zErrorResponse():', () => {
     [
       'Empty error array when errors are required',
       {
-        schema: zErrorResponse(TestEnum.Test, [z.literal('any')], {
+        schema: zFailureResponse(TestEnum.Test, [z.literal('any')], {
           errorRequired: true,
         }),
         response: {
@@ -280,7 +280,7 @@ describe('zErrorResponse():', () => {
     [
       'Non-empty Error array with no defined error schemas',
       {
-        schema: zErrorResponse(TestEnum.Test),
+        schema: zFailureResponse(TestEnum.Test),
         response: {
           status: TestEnum.Test,
           body: { ...defaultBody, errors: ['?'] },

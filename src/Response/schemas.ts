@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import {
-  Error,
+  ResponseError,
   SuccessResponse,
-  ErrorResponse,
+  FailureResponse,
   ResponseBodyStatus,
 } from './types';
-import { ErrorMessage } from '@/Error';
+import type { ErrorMessage } from '@/ErrorMessage';
 import { ErrorCode, SuccessCode } from './status-codes';
 
 export function zSuccessResponse<T extends SuccessCode>(
@@ -28,12 +28,14 @@ export function zSuccessResponse<T extends SuccessCode, D extends z.ZodTypeAny>(
   }) as any;
 }
 
-export function zError<T extends ErrorMessage>(message: T): z.ZodType<Error<T>>;
-export function zError<T extends ErrorMessage, D extends z.ZodTypeAny>(
+export function zResponseError<T extends ErrorMessage>(
+  message: T
+): z.ZodType<ResponseError<T>>;
+export function zResponseError<T extends ErrorMessage, D extends z.ZodTypeAny>(
   message: T,
   detail: D
-): z.ZodType<Error<T, z.infer<D>>>;
-export function zError<T extends ErrorMessage, D extends z.ZodTypeAny>(
+): z.ZodType<ResponseError<T, z.infer<D>>>;
+export function zResponseError<T extends ErrorMessage, D extends z.ZodTypeAny>(
   message: T,
   detail?: D
 ) {
@@ -43,9 +45,9 @@ export function zError<T extends ErrorMessage, D extends z.ZodTypeAny>(
   }) as any;
 }
 
-export function zErrorResponse<
+export function zFailureResponse<
   T extends ErrorCode,
-  E extends ReturnType<typeof zError<ErrorMessage, z.ZodTypeAny>>[]
+  E extends ReturnType<typeof zResponseError<ErrorMessage, z.ZodTypeAny>>[]
 >(code: T, errors?: E, { errorRequired = false } = {}) {
   const errorArray = errors === undefined || !errors.length
     ? z.array(z.any()).max(0)
@@ -63,5 +65,5 @@ export function zErrorResponse<
       status: z.literal(ResponseBodyStatus.failure),
       errors: errorArray,
     }),
-  }) as z.ZodType<ErrorResponse<T, z.infer<E[number]>[]>>;
+  }) as z.ZodType<FailureResponse<T, z.infer<E[number]>[]>>;
 }

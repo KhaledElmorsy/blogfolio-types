@@ -1,5 +1,5 @@
 import { SuccessCode, ErrorCode } from './status-codes';
-import type { ErrorMessage } from '@/Error';
+import type { ErrorMessage } from '@/ErrorMessage';
 
 export enum ResponseBodyStatus {
   success = 'success',
@@ -16,16 +16,16 @@ export interface SuccessResponse<
   } & (D extends undefined ? {} : { data: D });
 }
 
-export type Error<
+export type ResponseError<
   M extends ErrorMessage,
   T extends object | undefined = undefined
 > = {
   message: M;
 } & (T extends undefined ? {} : { detail: T });
 
-export interface ErrorResponse<
+export interface FailureResponse<
   S extends ErrorCode,
-  T extends Error<ErrorMessage, object | undefined>[]
+  T extends ResponseError<ErrorMessage, object | undefined>[]
 > {
   status: S;
   body: {
@@ -36,4 +36,7 @@ export interface ErrorResponse<
 
 export type Response =
   | SuccessResponse<SuccessCode, object | undefined>
-  | ErrorResponse<ErrorCode, Error<ErrorMessage, object | undefined>[]>;
+  | FailureResponse<
+  ErrorCode,
+  ResponseError<ErrorMessage, object | undefined>[]
+  >;

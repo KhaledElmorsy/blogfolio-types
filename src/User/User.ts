@@ -4,11 +4,11 @@ import type { InferZodRecord } from '../util/types';
 import {
   ErrorCode,
   SuccessCode,
-  zError,
-  zErrorResponse,
+  zResponseError,
+  zFailureResponse,
   zSuccessResponse,
 } from '@/Response';
-import Error from '@/Error';
+import ErrorMessage from '@/ErrorMessage';
 import type {
   Controller,
   ControllerSchema,
@@ -34,8 +34,8 @@ const Id = z.object({
 
 const Email = z.object({
   email: z
-    .string({ invalid_type_error: Error.User.WrongTypeEmail })
-    .email(Error.User.InvalidEmail),
+    .string({ invalid_type_error: ErrorMessage.User.WrongTypeEmail })
+    .email(ErrorMessage.User.InvalidEmail),
 });
 
 const Username = z.object({
@@ -46,12 +46,12 @@ const Username = z.object({
    * - Doesn't start or end with a period.
    */
   username: z
-    .string({ invalid_type_error: Error.User.WrongTypeUsername })
-    .min(6, Error.User.ShortUsername)
-    .max(30, Error.User.LongUsername)
+    .string({ invalid_type_error: ErrorMessage.User.WrongTypeUsername })
+    .min(6, ErrorMessage.User.ShortUsername)
+    .max(30, ErrorMessage.User.LongUsername)
     .regex(
       /^(?!\.)([a-zA-Z0-9]|(?<!\.)\.)+(?<!\.)$/,
-      Error.User.InvalidUsername
+      ErrorMessage.User.InvalidUsername
     ),
 });
 
@@ -67,10 +67,10 @@ const Password = z.object({
    *    - Special Chars from ' ' - '/' (Ascii 32-47)
    */
   password: z
-    .string({ invalid_type_error: Error.User.WrongTypePassword })
-    .min(8, Error.User.ShortPassword)
-    .max(50, Error.User.LongPassword)
-    .regex(/[a-zA-Z0-9 -/]/, Error.User.InvalidPassword)
+    .string({ invalid_type_error: ErrorMessage.User.WrongTypePassword })
+    .min(8, ErrorMessage.User.ShortPassword)
+    .max(50, ErrorMessage.User.LongPassword)
+    .regex(/[a-zA-Z0-9 -/]/, ErrorMessage.User.InvalidPassword)
     .refine(
       (pass) =>
         Number(/[a-z]/.test(pass))
@@ -78,25 +78,25 @@ const Password = z.object({
           + Number(/\d/.test(pass))
           + Number(/[ -/]+/.test(pass))
         >= 3,
-      Error.User.WeakPassword
+      ErrorMessage.User.WeakPassword
     ),
 });
 
 const Misc = z.object({
   bio: z
-    .string({ invalid_type_error: Error.User.WrongTypeBio })
-    .min(1, Error.User.BlankBio)
-    .max(300, Error.User.LongBio)
+    .string({ invalid_type_error: ErrorMessage.User.WrongTypeBio })
+    .min(1, ErrorMessage.User.BlankBio)
+    .max(300, ErrorMessage.User.LongBio)
     .nullable(),
   firstName: z
-    .string({ invalid_type_error: Error.User.WrongTypeFirstName })
-    .min(1, Error.User.BlankFirstName)
-    .max(30, Error.User.LongFirstName)
+    .string({ invalid_type_error: ErrorMessage.User.WrongTypeFirstName })
+    .min(1, ErrorMessage.User.BlankFirstName)
+    .max(30, ErrorMessage.User.LongFirstName)
     .nullable(),
   lastName: z
-    .string({ invalid_type_error: Error.User.WrongTypeLastName })
-    .min(1, Error.User.BlankLastName)
-    .max(30, Error.User.LongLastName)
+    .string({ invalid_type_error: ErrorMessage.User.WrongTypeLastName })
+    .min(1, ErrorMessage.User.BlankLastName)
+    .max(30, ErrorMessage.User.LongLastName)
     .nullable(),
   photoSmall: z.string().nullable(),
   photoFull: z.string().nullable(),
@@ -184,76 +184,76 @@ const response = {
     ),
   },
 
-  error: {
-    userIdNotFound: zErrorResponse(
+  failure: {
+    userIdNotFound: zFailureResponse(
       ErrorCode.NotFound,
-      [zError(Error.User.UserNotFound, Id)],
+      [zResponseError(ErrorMessage.User.UserNotFound, Id)],
       { errorRequired: true }
     ),
-    generalInvalidRequest: zErrorResponse(ErrorCode.BadRequest, [
-      zError(Error.General.InvalidRequest, z.any()),
+    generalInvalidRequest: zFailureResponse(ErrorCode.BadRequest, [
+      zResponseError(ErrorMessage.General.InvalidRequest, z.any()),
     ]),
-    invalidUserData: zErrorResponse(ErrorCode.BadRequest, [
-      zError(Error.User.BlankBio, resUtil.invField(Misc, 'bio')),
-      zError(Error.User.LongBio, resUtil.invField(Misc, 'bio')),
-      zError(Error.User.WrongTypeBio, resUtil.invField(Misc, 'bio')),
+    invalidUserData: zFailureResponse(ErrorCode.BadRequest, [
+      zResponseError(ErrorMessage.User.BlankBio, resUtil.invField(Misc, 'bio')),
+      zResponseError(ErrorMessage.User.LongBio, resUtil.invField(Misc, 'bio')),
+      zResponseError(ErrorMessage.User.WrongTypeBio, resUtil.invField(Misc, 'bio')),
 
-      zError(Error.User.BlankFirstName, resUtil.invField(Misc, 'firstName')),
-      zError(Error.User.LongFirstName, resUtil.invField(Misc, 'firstName')),
-      zError(
-        Error.User.WrongTypeFirstName,
+      zResponseError(ErrorMessage.User.BlankFirstName, resUtil.invField(Misc, 'firstName')),
+      zResponseError(ErrorMessage.User.LongFirstName, resUtil.invField(Misc, 'firstName')),
+      zResponseError(
+        ErrorMessage.User.WrongTypeFirstName,
         resUtil.invField(Misc, 'firstName')
       ),
 
-      zError(Error.User.BlankLastName, resUtil.invField(Misc, 'lastName')),
-      zError(Error.User.LongLastName, resUtil.invField(Misc, 'lastName')),
-      zError(Error.User.WrongTypeLastName, resUtil.invField(Misc, 'lastName')),
+      zResponseError(ErrorMessage.User.BlankLastName, resUtil.invField(Misc, 'lastName')),
+      zResponseError(ErrorMessage.User.LongLastName, resUtil.invField(Misc, 'lastName')),
+      zResponseError(ErrorMessage.User.WrongTypeLastName, resUtil.invField(Misc, 'lastName')),
 
-      zError(Error.User.ShortUsername, resUtil.invField(Username, 'username')),
-      zError(Error.User.LongUsername, resUtil.invField(Username, 'username')),
-      zError(
-        Error.User.InvalidUsername,
+      zResponseError(ErrorMessage.User.ShortUsername, resUtil.invField(Username, 'username')),
+      zResponseError(ErrorMessage.User.LongUsername, resUtil.invField(Username, 'username')),
+      zResponseError(
+        ErrorMessage.User.InvalidUsername,
         resUtil.invField(Username, 'username')
       ),
 
-      zError(
-        Error.User.WrongTypeUsername,
+      zResponseError(
+        ErrorMessage.User.WrongTypeUsername,
         resUtil.invField(Username, 'username')
       ),
-      zError(Error.User.InvalidEmail, resUtil.invField(Email, 'email')),
-      zError(Error.User.WrongTypeEmail, resUtil.invField(Email, 'email')),
+      zResponseError(ErrorMessage.User.InvalidEmail, resUtil.invField(Email, 'email')),
+      zResponseError(ErrorMessage.User.WrongTypeEmail, resUtil.invField(Email, 'email')),
 
-      zError(Error.User.ShortPassword, resUtil.invField(Password, 'password')),
-      zError(Error.User.LongPassword, resUtil.invField(Password, 'password')),
-      zError(Error.User.WeakPassword, resUtil.invField(Password, 'password')),
-      zError(
-        Error.User.InvalidPassword,
+      zResponseError(ErrorMessage.User.ShortPassword, resUtil.invField(Password, 'password')),
+      zResponseError(ErrorMessage.User.LongPassword, resUtil.invField(Password, 'password')),
+      zResponseError(ErrorMessage.User.WeakPassword, resUtil.invField(Password, 'password')),
+      zResponseError(
+        ErrorMessage.User.InvalidPassword,
         resUtil.invField(Password, 'password')
       ),
-      zError(
-        Error.User.WrongTypePassword,
+      zResponseError(
+        ErrorMessage.User.WrongTypePassword,
         resUtil.invField(Password, 'password')
       ),
     ]),
-    userAlreadyFollows: zErrorResponse(ErrorCode.Conflict, [
-      zError(
-        Error.User.AlreadyFollowing,
+    userAlreadyFollows: zFailureResponse(ErrorCode.Conflict, [
+      zResponseError(
+        ErrorMessage.User.AlreadyFollowing,
         z.object({
           target: Id,
           follower: Id,
         })
       ),
     ]),
-    userArealdyActivated: zErrorResponse(ErrorCode.Conflict, [
-      zError(Error.User.AlreadyActivated, Id),
+    userArealdyActivated: zFailureResponse(ErrorCode.Conflict, [
+      zResponseError(ErrorMessage.User.AlreadyActivated, Id),
     ]),
-    userFieldConflict: zErrorResponse(ErrorCode.Conflict, [
-      zError(Error.User.EmailExists, Email),
-      zError(Error.User.UsernameExists, Username),
+    userFieldConflict: zFailureResponse(ErrorCode.Conflict, [
+      zResponseError(ErrorMessage.User.EmailExists, Email),
+      zResponseError(ErrorMessage.User.UsernameExists, Username),
     ]),
-    userNotFollowing: zErrorResponse(ErrorCode.Conflict, [
-      zError(
-        Error.User.NotFollowing,
+    userNotFollowing: zFailureResponse(ErrorCode.Conflict, [
+      zResponseError(
+        ErrorMessage.User.NotFollowing,
         z.object({
           target: Id,
           follower: Id,
@@ -266,14 +266,14 @@ const response = {
 const responseGroup = {
   userList: z.union([
     response.success.foundUsers,
-    response.error.userIdNotFound,
-    response.error.generalInvalidRequest,
+    response.failure.userIdNotFound,
+    response.failure.generalInvalidRequest,
   ]),
   updateUserData: z.union([
     response.success.userDataUpdated,
-    response.error.invalidUserData,
-    response.error.userIdNotFound,
-    response.error.userFieldConflict,
+    response.failure.invalidUserData,
+    response.failure.userIdNotFound,
+    response.failure.userFieldConflict,
   ]),
 };
 
@@ -334,8 +334,8 @@ export const endPoints = {
     }),
     response: z.union([
       response.success.foundUser,
-      response.error.userIdNotFound,
-      response.error.generalInvalidRequest,
+      response.failure.userIdNotFound,
+      response.failure.generalInvalidRequest,
     ]),
   },
 
@@ -379,7 +379,7 @@ export const endPoints = {
     }),
     response: z.union([
       response.success.boolean,
-      response.error.userIdNotFound,
+      response.failure.userIdNotFound,
     ]),
   },
 
@@ -498,8 +498,8 @@ export const endPoints = {
     }),
     response: z.union([
       response.success.followerAdded,
-      response.error.userIdNotFound,
-      response.error.userAlreadyFollows,
+      response.failure.userIdNotFound,
+      response.failure.userAlreadyFollows,
     ]),
   },
 
@@ -511,8 +511,8 @@ export const endPoints = {
     }),
     response: z.union([
       response.success.userActivated,
-      response.error.userArealdyActivated,
-      response.error.userIdNotFound,
+      response.failure.userArealdyActivated,
+      response.failure.userIdNotFound,
     ]),
   },
 
@@ -527,9 +527,9 @@ export const endPoints = {
     }),
     response: z.union([
       response.success.userCreated,
-      response.error.invalidUserData,
-      response.error.generalInvalidRequest,
-      response.error.userFieldConflict,
+      response.failure.invalidUserData,
+      response.failure.generalInvalidRequest,
+      response.failure.userFieldConflict,
     ]),
   },
 
@@ -544,7 +544,7 @@ export const endPoints = {
     }),
     response: z.union([
       response.success.userDeleted,
-      response.error.userIdNotFound,
+      response.failure.userIdNotFound,
     ]),
   },
 
@@ -562,8 +562,8 @@ export const endPoints = {
     }),
     response: z.union([
       response.success.followerRemoved,
-      response.error.userNotFollowing,
-      response.error.userIdNotFound,
+      response.failure.userNotFollowing,
+      response.failure.userIdNotFound,
     ]),
   },
 } satisfies ControllerSchema<Controller>;

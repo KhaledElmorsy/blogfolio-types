@@ -1,5 +1,5 @@
-import UserError from './User/Error';
-import { Errors as QueryArrayError } from './util/schema/queryArray';
+import UserError from './User/ErrorMessage';
+import { ErrorMessage as QueryArrayError } from './util/schema/queryArray';
 import type { UnionToIntersection } from './util/types';
 
 export enum GeneralError {
@@ -8,7 +8,7 @@ export enum GeneralError {
   NotFound = 'Resource not found',
 }
 
-const Error = {
+const ErrorMessages = {
   General: GeneralError,
   User: UserError,
   Request: {
@@ -16,7 +16,7 @@ const Error = {
   },
 };
 
-export default Error;
+export default ErrorMessages;
 
 type Leaves<T> = {
   [f in keyof T]: T[f] extends Record<any, object> ? Leaves<T[f]> : T[f];
@@ -24,6 +24,6 @@ type Leaves<T> = {
   ? G[keyof G]
   : never;
 
-type ErrorMap = UnionToIntersection<Leaves<typeof Error>>;
+type ErrorMap = UnionToIntersection<Leaves<typeof ErrorMessages>>;
 
 export type ErrorMessage = ErrorMap[keyof ErrorMap];

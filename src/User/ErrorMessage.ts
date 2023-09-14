@@ -1,4 +1,4 @@
-enum Error {
+enum ErrorMessage {
   /* General */
   NoLogin = "Username or email doesn't exist",
   UserExists = 'A user with these login credentials already exists',
@@ -47,4 +47,4 @@ enum Error {
   AlreadyActivated = 'User account is already activated',
 }
 
-export default Error;
+export default ErrorMessage;
