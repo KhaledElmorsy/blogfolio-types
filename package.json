@@ -3,11 +3,11 @@
   "version": "0.0.5",
   "exports": {
     ".": "./build/index.js",
-    "./Error": "./build/Error.js",
     "./User": "./build/User/index.js",
     "./Endpoint": "./build/Endpoint.js",
     "./Controller": "./build/Controller.js",
-    "./Response": "./build/Response/index.js"
+    "./Response": "./build/Response/index.js",
+    "./ResponseError": "./build/ResponseError/index.js"
   },
   "types": "build/index.d.ts",
   "repository": "git@github.com:KhaledElmorsy/blogfolio-types.git",

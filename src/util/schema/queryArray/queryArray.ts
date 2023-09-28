@@ -1,5 +1,6 @@
 import { ZodEffects, z } from 'zod';
 import { inSet } from '@/util';
+import { stringifyErrorID, errorIDs } from '@/ResponseError';
 
 interface Options<O, S extends string | undefined> {
   /**
@@ -27,12 +28,6 @@ interface Options<O, S extends string | undefined> {
    * Any value/undefined allowed by default.
    */
   allowedSubValues?: S[] | Readonly<S[]>;
-}
-
-export enum ErrorMessage {
-  InvalidFormat = 'Invalid array format',
-  Duplicate = 'Duplicates not allowed',
-  InvalidValue = 'Invalid array value',
 }
 
 function queryArray<T extends string, S extends string | undefined>(
@@ -70,7 +65,7 @@ function queryArray<T extends string, S extends string>(
 
   return z
     .string()
-    .regex(regex, ErrorMessage.InvalidFormat)
+    .regex(regex, stringifyErrorID(errorIDs.Request.QueryArray.InvalidFormat))
     .transform((str, ctx) => {
       const elementSet: Set<T> = new Set();
       const elements: any[] = [];
@@ -79,7 +74,9 @@ function queryArray<T extends string, S extends string>(
         if (unique && inSet(elementSet, key)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: ErrorMessage.Duplicate,
+            message: stringifyErrorID(
+              errorIDs.Request.QueryArray.InvalidFormat
+            ),
             path: [key],
           });
           return;
@@ -87,7 +84,7 @@ function queryArray<T extends string, S extends string>(
         if (allowedSet.size && !inSet(allowedSet, key)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: ErrorMessage.InvalidValue,
+            message: stringifyErrorID(errorIDs.Request.QueryArray.InvalidValue),
             path: [element],
           });
           return;
@@ -96,7 +93,9 @@ function queryArray<T extends string, S extends string>(
           if (allowedSubValueSet.size && !inSet(allowedSubValueSet, value)) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: ErrorMessage.InvalidValue,
+              message: stringifyErrorID(
+                errorIDs.Request.QueryArray.InvalidValue
+              ),
               path: [`${key}: [${value}]`],
             });
             return;

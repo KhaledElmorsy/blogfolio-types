@@ -1,8 +1,7 @@
 // @ts-nocheck
-
 import { z } from 'zod';
 import { describe, it, expect } from 'vitest';
-import { zSuccessResponse, zResponseError, zFailureResponse } from '../schemas';
+import { zSuccessResponse, zFailureResponse } from '../schemas';
 import { ResponseBodyStatus } from '../types';
 
 const TestEnum = {
@@ -97,75 +96,6 @@ describe('zSuccessResponse()', () => {
     ],
   ])('Catches invalid responses: %s', (_, { schema, response }) => {
     expect(() => schema.parse(response)).toThrow();
-  });
-});
-
-describe('zResponseError()', () => {
-  it.each([
-    [
-      'Correct error message',
-      {
-        schema: zResponseError(TestEnum.Test),
-        error: {
-          message: TestEnum.Test,
-        },
-      },
-    ],
-    [
-      'Correct "detail" field type',
-      {
-        schema: zResponseError(TestEnum.Test, z.string()),
-        error: {
-          message: TestEnum.Test,
-          detail: 'nice',
-        },
-      },
-    ],
-  ])('Parses valid inputs: %s', (_, { schema, error }) => {
-    expect(() => schema.parse(error)).not.toThrow();
-  });
-
-  it.each([
-    [
-      'Wrong error message',
-      {
-        schema: zResponseError(TestEnum.Test),
-        error: {
-          message: TestEnum.Test2,
-        },
-      },
-    ],
-    [
-      'Wrong "detail" field type',
-      {
-        schema: zResponseError(TestEnum.Test, z.string()),
-        error: {
-          message: TestEnum.Test,
-          detail: 0,
-        },
-      },
-    ],
-    [
-      'Has "detail" field when not defined in the schema',
-      {
-        schema: zResponseError(TestEnum.Test),
-        error: {
-          message: TestEnum.Test,
-          detail: {},
-        },
-      },
-    ],
-    [
-      'Missing "detail" field',
-      {
-        schema: zResponseError(TestEnum.Test, z.number()),
-        error: {
-          message: TestEnum.Test,
-        },
-      },
-    ],
-  ])('Catches invalid inputs: %s', (_, { schema, error }) => {
-    expect(() => schema.parse(error)).toThrow();
   });
 });
 

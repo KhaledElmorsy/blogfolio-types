@@ -1,2 +1,2 @@
 export { default as booleanString } from './booleanString';
-export { default as queryArray } from './queryArray';
+export { queryArray } from './queryArray';

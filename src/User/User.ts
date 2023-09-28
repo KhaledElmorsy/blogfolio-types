@@ -1,14 +1,13 @@
 import { z } from 'zod';
 import { queryArray } from '../util/schema';
 import type { InferZodRecord } from '../util/types';
+import { zResponseError, errorIDs, stringifyErrorID } from '@/ResponseError';
 import {
   ErrorCode,
   SuccessCode,
-  zResponseError,
   zFailureResponse,
   zSuccessResponse,
 } from '@/Response';
-import ErrorMessage from '@/ErrorMessage';
 import type {
   Controller,
   ControllerSchema,
@@ -34,8 +33,8 @@ const Id = z.object({
 
 const Email = z.object({
   email: z
-    .string({ invalid_type_error: ErrorMessage.User.WrongTypeEmail })
-    .email(ErrorMessage.User.InvalidEmail),
+    .string({ invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeEmail) })
+    .email(stringifyErrorID(errorIDs.User.InvalidEmail)),
 });
 
 const Username = z.object({
@@ -46,12 +45,14 @@ const Username = z.object({
    * - Doesn't start or end with a period.
    */
   username: z
-    .string({ invalid_type_error: ErrorMessage.User.WrongTypeUsername })
-    .min(6, ErrorMessage.User.ShortUsername)
-    .max(30, ErrorMessage.User.LongUsername)
+    .string({
+      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeUsername),
+    })
+    .min(6, stringifyErrorID(errorIDs.User.ShortUsername))
+    .max(30, stringifyErrorID(errorIDs.User.LongUsername))
     .regex(
       /^(?!\.)([a-zA-Z0-9]|(?<!\.)\.)+(?<!\.)$/,
-      ErrorMessage.User.InvalidUsername
+      stringifyErrorID(errorIDs.User.InvalidUsername)
     ),
 });
 
@@ -67,10 +68,12 @@ const Password = z.object({
    *    - Special Chars from ' ' - '/' (Ascii 32-47)
    */
   password: z
-    .string({ invalid_type_error: ErrorMessage.User.WrongTypePassword })
-    .min(8, ErrorMessage.User.ShortPassword)
-    .max(50, ErrorMessage.User.LongPassword)
-    .regex(/[a-zA-Z0-9 -/]/, ErrorMessage.User.InvalidPassword)
+    .string({
+      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypePassword),
+    })
+    .min(8, stringifyErrorID(errorIDs.User.ShortPassword))
+    .max(50, stringifyErrorID(errorIDs.User.LongPassword))
+    .regex(/[a-zA-Z0-9 -/]/, stringifyErrorID(errorIDs.User.InvalidPassword))
     .refine(
       (pass) =>
         Number(/[a-z]/.test(pass))
@@ -78,25 +81,29 @@ const Password = z.object({
           + Number(/\d/.test(pass))
           + Number(/[ -/]+/.test(pass))
         >= 3,
-      ErrorMessage.User.WeakPassword
+      stringifyErrorID(errorIDs.User.WeakPassword)
     ),
 });
 
 const Misc = z.object({
   bio: z
-    .string({ invalid_type_error: ErrorMessage.User.WrongTypeBio })
-    .min(1, ErrorMessage.User.BlankBio)
-    .max(300, ErrorMessage.User.LongBio)
+    .string({ invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeBio) })
+    .min(1, stringifyErrorID(errorIDs.User.BlankBio))
+    .max(300, stringifyErrorID(errorIDs.User.LongBio))
     .nullable(),
   firstName: z
-    .string({ invalid_type_error: ErrorMessage.User.WrongTypeFirstName })
-    .min(1, ErrorMessage.User.BlankFirstName)
-    .max(30, ErrorMessage.User.LongFirstName)
+    .string({
+      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeFirstName),
+    })
+    .min(1, stringifyErrorID(errorIDs.User.BlankFirstName))
+    .max(30, stringifyErrorID(errorIDs.User.LongFirstName))
     .nullable(),
   lastName: z
-    .string({ invalid_type_error: ErrorMessage.User.WrongTypeLastName })
-    .min(1, ErrorMessage.User.BlankLastName)
-    .max(30, ErrorMessage.User.LongLastName)
+    .string({
+      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeLastName),
+    })
+    .min(1, stringifyErrorID(errorIDs.User.BlankLastName))
+    .max(30, stringifyErrorID(errorIDs.User.LongLastName))
     .nullable(),
   photoSmall: z.string().nullable(),
   photoFull: z.string().nullable(),
@@ -144,7 +151,7 @@ export type Resources = InferZodRecord<typeof resources>;
 /* ===================================================== */
 
 const resUtil = {
-  invField: <T extends z.ZodObject<any>, K extends keyof T['shape']>(
+  invalidFieldObject: <T extends z.ZodObject<any>, K extends keyof T['shape']>(
     obj: T,
     key: K
   ) => z.object({ [key]: z.any() } as { [x in K]: z.ZodAny }),
@@ -187,57 +194,99 @@ const response = {
   failure: {
     userIdNotFound: zFailureResponse(
       ErrorCode.NotFound,
-      [zResponseError(ErrorMessage.User.UserNotFound, Id)],
+      [zResponseError(errorIDs.User.UserNotFound, Id)],
       { errorRequired: true }
     ),
-    generalInvalidRequest: zFailureResponse(ErrorCode.BadRequest, [
-      zResponseError(ErrorMessage.General.InvalidRequest, z.any()),
-    ]),
     invalidUserData: zFailureResponse(ErrorCode.BadRequest, [
-      zResponseError(ErrorMessage.User.BlankBio, resUtil.invField(Misc, 'bio')),
-      zResponseError(ErrorMessage.User.LongBio, resUtil.invField(Misc, 'bio')),
-      zResponseError(ErrorMessage.User.WrongTypeBio, resUtil.invField(Misc, 'bio')),
-
-      zResponseError(ErrorMessage.User.BlankFirstName, resUtil.invField(Misc, 'firstName')),
-      zResponseError(ErrorMessage.User.LongFirstName, resUtil.invField(Misc, 'firstName')),
       zResponseError(
-        ErrorMessage.User.WrongTypeFirstName,
-        resUtil.invField(Misc, 'firstName')
+        errorIDs.User.BlankBio,
+        resUtil.invalidFieldObject(Misc, 'bio')
       ),
-
-      zResponseError(ErrorMessage.User.BlankLastName, resUtil.invField(Misc, 'lastName')),
-      zResponseError(ErrorMessage.User.LongLastName, resUtil.invField(Misc, 'lastName')),
-      zResponseError(ErrorMessage.User.WrongTypeLastName, resUtil.invField(Misc, 'lastName')),
-
-      zResponseError(ErrorMessage.User.ShortUsername, resUtil.invField(Username, 'username')),
-      zResponseError(ErrorMessage.User.LongUsername, resUtil.invField(Username, 'username')),
       zResponseError(
-        ErrorMessage.User.InvalidUsername,
-        resUtil.invField(Username, 'username')
+        errorIDs.User.LongBio,
+        resUtil.invalidFieldObject(Misc, 'bio')
+      ),
+      zResponseError(
+        errorIDs.User.WrongTypeBio,
+        resUtil.invalidFieldObject(Misc, 'bio')
       ),
 
       zResponseError(
-        ErrorMessage.User.WrongTypeUsername,
-        resUtil.invField(Username, 'username')
+        errorIDs.User.BlankFirstName,
+        resUtil.invalidFieldObject(Misc, 'firstName')
       ),
-      zResponseError(ErrorMessage.User.InvalidEmail, resUtil.invField(Email, 'email')),
-      zResponseError(ErrorMessage.User.WrongTypeEmail, resUtil.invField(Email, 'email')),
+      zResponseError(
+        errorIDs.User.LongFirstName,
+        resUtil.invalidFieldObject(Misc, 'firstName')
+      ),
+      zResponseError(
+        errorIDs.User.WrongTypeFirstName,
+        resUtil.invalidFieldObject(Misc, 'firstName')
+      ),
 
-      zResponseError(ErrorMessage.User.ShortPassword, resUtil.invField(Password, 'password')),
-      zResponseError(ErrorMessage.User.LongPassword, resUtil.invField(Password, 'password')),
-      zResponseError(ErrorMessage.User.WeakPassword, resUtil.invField(Password, 'password')),
       zResponseError(
-        ErrorMessage.User.InvalidPassword,
-        resUtil.invField(Password, 'password')
+        errorIDs.User.BlankLastName,
+        resUtil.invalidFieldObject(Misc, 'lastName')
       ),
       zResponseError(
-        ErrorMessage.User.WrongTypePassword,
-        resUtil.invField(Password, 'password')
+        errorIDs.User.LongLastName,
+        resUtil.invalidFieldObject(Misc, 'lastName')
+      ),
+      zResponseError(
+        errorIDs.User.WrongTypeLastName,
+        resUtil.invalidFieldObject(Misc, 'lastName')
+      ),
+
+      zResponseError(
+        errorIDs.User.ShortUsername,
+        resUtil.invalidFieldObject(Username, 'username')
+      ),
+      zResponseError(
+        errorIDs.User.LongUsername,
+        resUtil.invalidFieldObject(Username, 'username')
+      ),
+      zResponseError(
+        errorIDs.User.InvalidUsername,
+        resUtil.invalidFieldObject(Username, 'username')
+      ),
+
+      zResponseError(
+        errorIDs.User.WrongTypeUsername,
+        resUtil.invalidFieldObject(Username, 'username')
+      ),
+      zResponseError(
+        errorIDs.User.InvalidEmail,
+        resUtil.invalidFieldObject(Email, 'email')
+      ),
+      zResponseError(
+        errorIDs.User.WrongTypeEmail,
+        resUtil.invalidFieldObject(Email, 'email')
+      ),
+
+      zResponseError(
+        errorIDs.User.ShortPassword,
+        resUtil.invalidFieldObject(Password, 'password')
+      ),
+      zResponseError(
+        errorIDs.User.LongPassword,
+        resUtil.invalidFieldObject(Password, 'password')
+      ),
+      zResponseError(
+        errorIDs.User.WeakPassword,
+        resUtil.invalidFieldObject(Password, 'password')
+      ),
+      zResponseError(
+        errorIDs.User.InvalidPassword,
+        resUtil.invalidFieldObject(Password, 'password')
+      ),
+      zResponseError(
+        errorIDs.User.WrongTypePassword,
+        resUtil.invalidFieldObject(Password, 'password')
       ),
     ]),
     userAlreadyFollows: zFailureResponse(ErrorCode.Conflict, [
       zResponseError(
-        ErrorMessage.User.AlreadyFollowing,
+        errorIDs.User.AlreadyFollowing,
         z.object({
           target: Id,
           follower: Id,
@@ -245,15 +294,15 @@ const response = {
       ),
     ]),
     userArealdyActivated: zFailureResponse(ErrorCode.Conflict, [
-      zResponseError(ErrorMessage.User.AlreadyActivated, Id),
+      zResponseError(errorIDs.User.AlreadyActivated, Id),
     ]),
     userFieldConflict: zFailureResponse(ErrorCode.Conflict, [
-      zResponseError(ErrorMessage.User.EmailExists, Email),
-      zResponseError(ErrorMessage.User.UsernameExists, Username),
+      zResponseError(errorIDs.User.EmailExists, Email),
+      zResponseError(errorIDs.User.UsernameExists, Username),
     ]),
     userNotFollowing: zFailureResponse(ErrorCode.Conflict, [
       zResponseError(
-        ErrorMessage.User.NotFollowing,
+        errorIDs.User.NotFollowing,
         z.object({
           target: Id,
           follower: Id,
@@ -267,7 +316,6 @@ const responseGroup = {
   userList: z.union([
     response.success.foundUsers,
     response.failure.userIdNotFound,
-    response.failure.generalInvalidRequest,
   ]),
   updateUserData: z.union([
     response.success.userDataUpdated,
@@ -335,7 +383,6 @@ export const endPoints = {
     response: z.union([
       response.success.foundUser,
       response.failure.userIdNotFound,
-      response.failure.generalInvalidRequest,
     ]),
   },
 
@@ -528,7 +575,6 @@ export const endPoints = {
     response: z.union([
       response.success.userCreated,
       response.failure.invalidUserData,
-      response.failure.generalInvalidRequest,
       response.failure.userFieldConflict,
     ]),
   },
