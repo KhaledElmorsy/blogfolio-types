@@ -33,7 +33,9 @@ const Id = z.object({
 
 const Email = z.object({
   email: z
-    .string({ invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeEmail) })
+    .string({
+      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeEmail),
+    })
     .email(stringifyErrorID(errorIDs.User.InvalidEmail)),
 });
 
@@ -87,7 +89,9 @@ const Password = z.object({
 
 const Misc = z.object({
   bio: z
-    .string({ invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeBio) })
+    .string({
+      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeBio),
+    })
     .min(1, stringifyErrorID(errorIDs.User.BlankBio))
     .max(300, stringifyErrorID(errorIDs.User.LongBio))
     .nullable(),
@@ -309,6 +313,9 @@ const response = {
         })
       ),
     ]),
+    newPasswordNotDifferent: zFailureResponse(ErrorCode.Conflict, [
+      zResponseError(errorIDs.User.SamePassword),
+    ]),
   },
 };
 
@@ -502,7 +509,12 @@ export const endPoints = {
       params: Id,
       body: Password,
     }),
-    response: responseGroup.updateUserData,
+    response: z.union([
+      response.success.userDataUpdated,
+      response.failure.newPasswordNotDifferent,
+      response.failure.userIdNotFound,
+      response.failure.invalidUserData,
+    ]),
   },
 
   /**
