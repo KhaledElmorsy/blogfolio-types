@@ -19,3 +19,12 @@ export default function zResponseError<
     data: data ?? z.undefined(),
   });
 }
+
+export type ResponseErrorSchema<
+  T extends ErrorID = ErrorID,
+  D extends z.ZodObject<z.ZodRawShape> | undefined = undefined
+> = ReturnType<
+D extends z.ZodObject<z.ZodRawShape>
+  ? typeof zResponseError<T, D>
+  : typeof zResponseError<T>
+>;

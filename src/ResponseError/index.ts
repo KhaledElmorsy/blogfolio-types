@@ -4,3 +4,4 @@ export * from './ResponseError';
 export type { BaseErrorID } from './misc';
 export * from './ErrorIDString';
 export { default as zResponseError } from './zResponseError';
+export * from './zResponseError';

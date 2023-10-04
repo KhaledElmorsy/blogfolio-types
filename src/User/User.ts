@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { queryArray } from '../util/schema';
 import type { InferZodRecord } from '../util/types';
-import { zResponseError, errorIDs, stringifyErrorID } from '@/ResponseError';
+import { zResponseError, errorIDs } from '@/ResponseError';
 import {
   ErrorCode,
   SuccessCode,
@@ -13,12 +13,13 @@ import type {
   ControllerSchema,
   InferController,
 } from '@/Controller';
+import { zWithErrors } from '@/util';
 
 /* ===================================================== */
 /*                    COMPONENTS                         */
 /* ===================================================== */
 
-const __Id = z.object({
+const __id = z.object({
   /**
    * Internal primary key used in the database.
    * Shouldn't be returned by endpoints.
@@ -26,89 +27,122 @@ const __Id = z.object({
   __id: z.string(),
 });
 
-const Id = z.object({
+const id = z.object({
   /** Public UID */
   id: z.string(),
 });
 
-const Email = z.object({
-  email: z
-    .string({
-      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeEmail),
-    })
-    .email(stringifyErrorID(errorIDs.User.InvalidEmail)),
-});
+const email = zWithErrors(
+  { type: errorIDs.User.WrongTypeEmail, invalid: errorIDs.User.InvalidEmail },
+  ({ type, invalid }) =>
+    z
+      .string({
+        invalid_type_error: type,
+      })
+      .email(invalid)
+);
 
-const Username = z.object({
-  /**
-   * Usernames rules:
-   * - Alphanumeric\period only.
-   * - No multiple adjacent periods.
-   * - Doesn't start or end with a period.
-   */
-  username: z
-    .string({
-      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeUsername),
-    })
-    .min(6, stringifyErrorID(errorIDs.User.ShortUsername))
-    .max(30, stringifyErrorID(errorIDs.User.LongUsername))
-    .regex(
-      /^(?!\.)([a-zA-Z0-9]|(?<!\.)\.)+(?<!\.)$/,
-      stringifyErrorID(errorIDs.User.InvalidUsername)
-    ),
-});
+/**
+ * Usernames rules:
+ * - Alphanumeric\period only.
+ * - No multiple adjacent periods.
+ * - Doesn't start or end with a period.
+ */
+const username = zWithErrors(
+  {
+    type: errorIDs.User.WrongTypeUsername,
+    short: errorIDs.User.ShortUsername,
+    long: errorIDs.User.LongUsername,
+    invalid: errorIDs.User.InvalidUsername,
+  },
+  ({ type, short, long, invalid }) =>
+    z
+      .string({
+        invalid_type_error: type,
+      })
+      .min(6, short)
+      .max(30, long)
+      .regex(/^(?!\.)([a-zA-Z0-9]|(?<!\.)\.)+(?<!\.)$/, invalid)
+);
 
-const Password = z.object({
-  /**
-   * Passwords should:
-   *  - Be 8 characters or more
-   *  - Be at most 50 characters
-   *  - Contain (>= 3/4) of:
-   *    - Lowercase letters
-   *    - Uppercase letters
-   *    - Numbers
-   *    - Special Chars from ' ' - '/' (Ascii 32-47)
-   */
-  password: z
-    .string({
-      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypePassword),
-    })
-    .min(8, stringifyErrorID(errorIDs.User.ShortPassword))
-    .max(50, stringifyErrorID(errorIDs.User.LongPassword))
-    .regex(/[a-zA-Z0-9 -/]/, stringifyErrorID(errorIDs.User.InvalidPassword))
-    .refine(
-      (pass) =>
-        Number(/[a-z]/.test(pass))
-          + Number(/[A-Z]/.test(pass))
-          + Number(/\d/.test(pass))
-          + Number(/[ -/]+/.test(pass))
-        >= 3,
-      stringifyErrorID(errorIDs.User.WeakPassword)
-    ),
-});
+/**
+ * Passwords should:
+ *  - Be 8 characters or more
+ *  - Be at most 50 characters
+ *  - Contain (>= 3/4) of:
+ *    - Lowercase letters
+ *    - Uppercase letters
+ *    - Numbers
+ *    - Special Chars from ' ' - '/' (Ascii 32-47)
+ */
+const password = zWithErrors(
+  {
+    type: errorIDs.User.WrongTypePassword,
+    short: errorIDs.User.ShortPassword,
+    long: errorIDs.User.LongPassword,
+    invalid: errorIDs.User.InvalidPassword,
+    weak: errorIDs.User.WeakPassword,
+  },
+  ({ type, short, long, invalid, weak }) =>
+    z
+      .string({
+        invalid_type_error: type,
+      })
+      .min(8, short)
+      .max(50, long)
+      .regex(/[a-zA-Z0-9 -/]/, invalid)
+      .refine(
+        (pass) =>
+          Number(/[a-z]/.test(pass))
+            + Number(/[A-Z]/.test(pass))
+            + Number(/\d/.test(pass))
+            + Number(/[ -/]+/.test(pass))
+          >= 3,
+        weak
+      )
+);
 
 const Misc = z.object({
-  bio: z
-    .string({
-      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeBio),
-    })
-    .min(1, stringifyErrorID(errorIDs.User.BlankBio))
-    .max(300, stringifyErrorID(errorIDs.User.LongBio))
-    .nullable(),
-  firstName: z
-    .string({
-      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeFirstName),
-    })
-    .min(1, stringifyErrorID(errorIDs.User.BlankFirstName))
-    .max(30, stringifyErrorID(errorIDs.User.LongFirstName))
-    .nullable(),
-  lastName: z
-    .string({
-      invalid_type_error: stringifyErrorID(errorIDs.User.WrongTypeLastName),
-    })
-    .min(1, stringifyErrorID(errorIDs.User.BlankLastName))
-    .max(30, stringifyErrorID(errorIDs.User.LongLastName))
-    .nullable(),
+  bio: zWithErrors(
+    {
+      type: errorIDs.User.WrongTypeBio,
+      blank: errorIDs.User.BlankBio,
+      long: errorIDs.User.LongBio,
+    },
+    ({ type, blank, long }) =>
+      z
+        .string({ invalid_type_error: type })
+        .min(1, blank)
+        .max(300, long)
+        .nullable()
+  ),
+
+  firstName: zWithErrors(
+    {
+      type: errorIDs.User.WrongTypeFirstName,
+      blank: errorIDs.User.BlankFirstName,
+      long: errorIDs.User.LongFirstName,
+    },
+    ({ type, blank, long }) =>
+      z
+        .string({ invalid_type_error: type })
+        .min(1, blank)
+        .max(30, long)
+        .nullable()
+  ),
+  lastName: zWithErrors(
+    {
+      type: errorIDs.User.WrongTypeLastName,
+      blank: errorIDs.User.BlankLastName,
+      long: errorIDs.User.LongLastName,
+    },
+    ({ type, blank, long }) =>
+      z
+        .string({ invalid_type_error: type })
+        .min(1, blank)
+        .max(30, long)
+        .nullable()
+  ),
   photoSmall: z.string().nullable(),
   photoFull: z.string().nullable(),
 });
@@ -119,11 +153,11 @@ const FollowCounts = z.object({
 });
 
 export const components = {
-  __Id,
-  Id,
-  Username,
-  Email,
-  Password,
+  __Id: __id,
+  Id: id,
+  Username: username,
+  Email: email,
+  Password: password,
   Misc,
   FollowCounts,
 };
@@ -134,11 +168,11 @@ export type Components = InferZodRecord<typeof components>;
 /*                     RESOURCES                         */
 /* ===================================================== */
 
-const User = Id.merge(Username).merge(Email).merge(Misc.partial());
+const User = id.merge(z.object({ username, email })).merge(Misc.partial());
 const QueriedUser = User.omit({ email: true }).merge(FollowCounts.partial());
-const NewUser = User.merge(Password);
+const NewUser = User.merge(z.object({ password }));
 const NewUserRequest = NewUser.omit({ id: true });
-const __QueriedUser = QueriedUser.merge(__Id);
+const __QueriedUser = QueriedUser.merge(__id);
 
 export const resources = {
   NewUser,
@@ -154,13 +188,6 @@ export type Resources = InferZodRecord<typeof resources>;
 /*                  COMMON RESPONSES                     */
 /* ===================================================== */
 
-const resUtil = {
-  invalidFieldObject: <T extends z.ZodObject<any>, K extends keyof T['shape']>(
-    obj: T,
-    key: K
-  ) => z.object({ [key]: z.any() } as { [x in K]: z.ZodAny }),
-};
-
 const response = {
   success: {
     foundUser: zSuccessResponse(
@@ -175,22 +202,22 @@ const response = {
       SuccessCode.Ok,
       z.object({ result: z.boolean() })
     ),
-    userDataUpdated: zSuccessResponse(SuccessCode.Ok, Id),
-    userCreated: zSuccessResponse(SuccessCode.Created, Id),
+    userDataUpdated: zSuccessResponse(SuccessCode.Ok, id),
+    userCreated: zSuccessResponse(SuccessCode.Created, id),
     followerAdded: zSuccessResponse(
       SuccessCode.Ok,
       z.object({
-        target: Id,
-        follower: Id,
+        target: id,
+        follower: id,
       })
     ),
-    userActivated: zSuccessResponse(SuccessCode.Ok, Id),
-    userDeleted: zSuccessResponse(SuccessCode.Ok, Id),
+    userActivated: zSuccessResponse(SuccessCode.Ok, id),
+    userDeleted: zSuccessResponse(SuccessCode.Ok, id),
     followerRemoved: zSuccessResponse(
       SuccessCode.Ok,
       z.object({
-        target: Id,
-        follower: Id,
+        target: id,
+        follower: id,
       })
     ),
   },
@@ -198,118 +225,33 @@ const response = {
   failure: {
     userIdNotFound: zFailureResponse(
       ErrorCode.NotFound,
-      [zResponseError(errorIDs.User.UserNotFound, Id)],
+      [zResponseError(errorIDs.User.UserNotFound, id)],
       { errorRequired: true }
     ),
-    invalidUserData: zFailureResponse(ErrorCode.BadRequest, [
-      zResponseError(
-        errorIDs.User.BlankBio,
-        resUtil.invalidFieldObject(Misc, 'bio')
-      ),
-      zResponseError(
-        errorIDs.User.LongBio,
-        resUtil.invalidFieldObject(Misc, 'bio')
-      ),
-      zResponseError(
-        errorIDs.User.WrongTypeBio,
-        resUtil.invalidFieldObject(Misc, 'bio')
-      ),
 
-      zResponseError(
-        errorIDs.User.BlankFirstName,
-        resUtil.invalidFieldObject(Misc, 'firstName')
-      ),
-      zResponseError(
-        errorIDs.User.LongFirstName,
-        resUtil.invalidFieldObject(Misc, 'firstName')
-      ),
-      zResponseError(
-        errorIDs.User.WrongTypeFirstName,
-        resUtil.invalidFieldObject(Misc, 'firstName')
-      ),
-
-      zResponseError(
-        errorIDs.User.BlankLastName,
-        resUtil.invalidFieldObject(Misc, 'lastName')
-      ),
-      zResponseError(
-        errorIDs.User.LongLastName,
-        resUtil.invalidFieldObject(Misc, 'lastName')
-      ),
-      zResponseError(
-        errorIDs.User.WrongTypeLastName,
-        resUtil.invalidFieldObject(Misc, 'lastName')
-      ),
-
-      zResponseError(
-        errorIDs.User.ShortUsername,
-        resUtil.invalidFieldObject(Username, 'username')
-      ),
-      zResponseError(
-        errorIDs.User.LongUsername,
-        resUtil.invalidFieldObject(Username, 'username')
-      ),
-      zResponseError(
-        errorIDs.User.InvalidUsername,
-        resUtil.invalidFieldObject(Username, 'username')
-      ),
-
-      zResponseError(
-        errorIDs.User.WrongTypeUsername,
-        resUtil.invalidFieldObject(Username, 'username')
-      ),
-      zResponseError(
-        errorIDs.User.InvalidEmail,
-        resUtil.invalidFieldObject(Email, 'email')
-      ),
-      zResponseError(
-        errorIDs.User.WrongTypeEmail,
-        resUtil.invalidFieldObject(Email, 'email')
-      ),
-
-      zResponseError(
-        errorIDs.User.ShortPassword,
-        resUtil.invalidFieldObject(Password, 'password')
-      ),
-      zResponseError(
-        errorIDs.User.LongPassword,
-        resUtil.invalidFieldObject(Password, 'password')
-      ),
-      zResponseError(
-        errorIDs.User.WeakPassword,
-        resUtil.invalidFieldObject(Password, 'password')
-      ),
-      zResponseError(
-        errorIDs.User.InvalidPassword,
-        resUtil.invalidFieldObject(Password, 'password')
-      ),
-      zResponseError(
-        errorIDs.User.WrongTypePassword,
-        resUtil.invalidFieldObject(Password, 'password')
-      ),
-    ]),
     userAlreadyFollows: zFailureResponse(ErrorCode.Conflict, [
       zResponseError(
         errorIDs.User.AlreadyFollowing,
         z.object({
-          target: Id,
-          follower: Id,
+          target: id,
+          follower: id,
         })
       ),
     ]),
+
     userArealdyActivated: zFailureResponse(ErrorCode.Conflict, [
-      zResponseError(errorIDs.User.AlreadyActivated, Id),
+      zResponseError(errorIDs.User.AlreadyActivated, id),
     ]),
     userFieldConflict: zFailureResponse(ErrorCode.Conflict, [
-      zResponseError(errorIDs.User.EmailExists, Email),
-      zResponseError(errorIDs.User.UsernameExists, Username),
+      zResponseError(errorIDs.User.EmailExists, z.object({ email })),
+      zResponseError(errorIDs.User.UsernameExists, z.object({ username })),
     ]),
     userNotFollowing: zFailureResponse(ErrorCode.Conflict, [
       zResponseError(
         errorIDs.User.NotFollowing,
         z.object({
-          target: Id,
-          follower: Id,
+          target: id,
+          follower: id,
         })
       ),
     ]),
@@ -326,7 +268,6 @@ const responseGroup = {
   ]),
   updateUserData: z.union([
     response.success.userDataUpdated,
-    response.failure.invalidUserData,
     response.failure.userIdNotFound,
     response.failure.userFieldConflict,
   ]),
@@ -359,7 +300,7 @@ const sortFields = z.object({
 
 const pagination = z.object({
   /** Public ID of the next user in the query. */
-  next: Id.shape.id,
+  next: id.shape.id,
   /** Number of results to return. */
   limit: z.coerce.number().min(0),
 });
@@ -384,7 +325,7 @@ export const endPoints = {
    */
   Get: {
     request: z.object({
-      params: Id.strict(),
+      params: id.strict(),
       query: userFields.partial().strict(),
     }),
     response: z.union([
@@ -400,7 +341,7 @@ export const endPoints = {
    */
   GetFollowers: {
     request: z.object({
-      params: Id,
+      params: id,
       query: userListQuery,
     }),
     response: responseGroup.userList,
@@ -413,7 +354,7 @@ export const endPoints = {
    */
   GetFollows: {
     request: z.object({
-      params: Id,
+      params: id,
       query: userListQuery,
     }),
     response: responseGroup.userList,
@@ -427,8 +368,8 @@ export const endPoints = {
   GetCheckFollow: {
     request: z.object({
       params: z.object({
-        id: Id.shape.id,
-        followerId: Id.shape.id,
+        id: id.shape.id,
+        followerId: id.shape.id,
       }),
     }),
     response: z.union([
@@ -446,14 +387,14 @@ export const endPoints = {
    */
   GetExistsEmail: {
     request: z.object({
-      params: Email,
+      params: z.object({ email }),
     }),
     response: response.success.boolean,
   },
 
   GetExistsUsername: {
     request: z.object({
-      params: Username,
+      params: z.object({ username }),
     }),
     response: response.success.boolean,
   },
@@ -493,7 +434,7 @@ export const endPoints = {
    */
   Put: {
     request: z.object({
-      params: Id,
+      params: id,
       body: Misc.partial(),
     }),
     response: responseGroup.updateUserData,
@@ -506,14 +447,13 @@ export const endPoints = {
    */
   PutPassword: {
     request: z.object({
-      params: Id,
-      body: Password,
+      params: id,
+      body: z.object({ password }),
     }),
     response: z.union([
       response.success.userDataUpdated,
       response.failure.newPasswordNotDifferent,
       response.failure.userIdNotFound,
-      response.failure.invalidUserData,
     ]),
   },
 
@@ -524,8 +464,8 @@ export const endPoints = {
    */
   PutEmail: {
     request: z.object({
-      params: Id,
-      body: Email,
+      params: id,
+      body: z.object({ email }),
     }),
     response: responseGroup.updateUserData,
   },
@@ -537,8 +477,8 @@ export const endPoints = {
    */
   PutUsername: {
     request: z.object({
-      params: Id,
-      body: Username,
+      params: id,
+      body: z.object({ username }),
     }),
     response: responseGroup.updateUserData,
   },
@@ -551,8 +491,8 @@ export const endPoints = {
   PutFollower: {
     request: z.object({
       params: z.object({
-        id: Id.shape.id,
-        followerId: Id.shape.id,
+        id: id.shape.id,
+        followerId: id.shape.id,
       }),
     }),
     response: z.union([
@@ -565,7 +505,7 @@ export const endPoints = {
   PutActivate: {
     request: z.object({
       params: z.object({
-        id: Id.shape.id,
+        id: id.shape.id,
       }),
     }),
     response: z.union([
@@ -586,7 +526,6 @@ export const endPoints = {
     }),
     response: z.union([
       response.success.userCreated,
-      response.failure.invalidUserData,
       response.failure.userFieldConflict,
     ]),
   },
@@ -598,7 +537,7 @@ export const endPoints = {
    */
   Delete: {
     request: z.object({
-      params: Id,
+      params: id,
     }),
     response: z.union([
       response.success.userDeleted,
@@ -614,8 +553,8 @@ export const endPoints = {
   DeleteFollow: {
     request: z.object({
       params: z.object({
-        id: Id.shape.id,
-        followerId: Id.shape.id,
+        id: id.shape.id,
+        followerId: id.shape.id,
       }),
     }),
     response: z.union([

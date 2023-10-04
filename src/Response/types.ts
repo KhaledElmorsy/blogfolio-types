@@ -18,7 +18,7 @@ export interface SuccessResponse<
 
 export interface FailureResponse<
   S extends ErrorCode,
-  T extends ResponseError<ErrorID, object | undefined>[]
+  T extends ResponseError<ErrorID, object | undefined>[] = []
 > {
   status: S;
   body: {

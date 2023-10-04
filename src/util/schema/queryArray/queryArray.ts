@@ -1,6 +1,6 @@
 import { ZodEffects, z } from 'zod';
-import { inSet } from '@/util';
-import { stringifyErrorID, errorIDs } from '@/ResponseError';
+import { inSet, zWithErrors, ZodSchemaWithErrors } from '@/util';
+import { ErrorID, errorIDs } from '@/ResponseError';
 
 interface Options<O, S extends string | undefined> {
   /**
@@ -30,14 +30,21 @@ interface Options<O, S extends string | undefined> {
   allowedSubValues?: S[] | Readonly<S[]>;
 }
 
+type WithQueryArrayErrors<
+  T extends z.ZodTypeAny,
+  E extends Record<string, ErrorID> = typeof errorIDs.Request.QueryArray
+> = ZodSchemaWithErrors<T, E[keyof E]>;
+
 function queryArray<T extends string, S extends string | undefined>(
   allowed?: T[] | Readonly<T[]> | [],
   { withSubValues = false, unique, allowedSubValues }?: Options<false, S>
-): ZodEffects<z.ZodString, T[], string>;
+): WithQueryArrayErrors<ZodEffects<z.ZodString, T[], string>>;
 function queryArray<T extends string, S extends string | undefined>(
   allowed: T[] | Readonly<T[]> | [],
   { withSubValues = true, unique, allowedSubValues }: Options<true, S>
-): ZodEffects<z.ZodString, Partial<{ [K in T]: S }>[], string>;
+): WithQueryArrayErrors<
+ZodEffects<z.ZodString, Partial<{ [K in T]: S }>[], string>
+>;
 /**
  * Verify and transform a comma separated query array: `foo,bar,buzz`
  * to an array of strings: `['foo','bar','buzz']`.
@@ -63,51 +70,58 @@ function queryArray<T extends string, S extends string>(
     ? /^([^\W_]+(:[^\W_]+)?,?)+[^,]$/ // 'foo:asc,bar,buzz:10'
     : /^([^\W_]+,?)+[^,]$/; // 'foo,bar,buzz,123'
 
-  return z
-    .string()
-    .regex(regex, stringifyErrorID(errorIDs.Request.QueryArray.InvalidFormat))
-    .transform((str, ctx) => {
-      const elementSet: Set<T> = new Set();
-      const elements: any[] = [];
-      str.split(',').forEach((element: T | string) => {
-        const [key, value] = withSubValues ? element.split(':') : [element];
-        if (unique && inSet(elementSet, key)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: stringifyErrorID(
-              errorIDs.Request.QueryArray.InvalidFormat
-            ),
-            path: [key],
+  return zWithErrors(
+    {
+      invalidValue: errorIDs.Request.QueryArray.InvalidValue,
+      invalidFormat: errorIDs.Request.QueryArray.InvalidFormat,
+      duplicate: errorIDs.Request.QueryArray.InvalidValue,
+    },
+    ({ invalidValue, invalidFormat, duplicate }) =>
+      z
+        .string()
+        .regex(regex, invalidFormat)
+        .transform((str, ctx) => {
+          const elementSet: Set<T> = new Set();
+          const elements: any[] = [];
+          str.split(',').forEach((element: T | string) => {
+            const [key, value] = withSubValues ? element.split(':') : [element];
+            if (unique && inSet(elementSet, key)) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: duplicate,
+                path: [key],
+              });
+              return;
+            }
+            if (allowedSet.size && !inSet(allowedSet, key)) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: invalidValue,
+                path: [element],
+              });
+              return;
+            }
+            if (withSubValues) {
+              if (
+                allowedSubValueSet.size
+                && !inSet(allowedSubValueSet, value)
+              ) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: invalidValue,
+                  path: [`${key}: [${value}]`],
+                });
+                return;
+              }
+              elements.push({ [key]: value } as any);
+            } else {
+              elements.push(key as any);
+            }
+            elementSet.add(key as T);
           });
-          return;
-        }
-        if (allowedSet.size && !inSet(allowedSet, key)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: stringifyErrorID(errorIDs.Request.QueryArray.InvalidValue),
-            path: [element],
-          });
-          return;
-        }
-        if (withSubValues) {
-          if (allowedSubValueSet.size && !inSet(allowedSubValueSet, value)) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: stringifyErrorID(
-                errorIDs.Request.QueryArray.InvalidValue
-              ),
-              path: [`${key}: [${value}]`],
-            });
-            return;
-          }
-          elements.push({ [key]: value } as any);
-        } else {
-          elements.push(key as any);
-        }
-        elementSet.add(key as T);
-      });
-      return elements;
-    });
+          return elements;
+        })
+  );
 }
 
 export default queryArray;
