@@ -7,6 +7,7 @@
   "exports": {
     ".": "./build/index.js",
     "./User": "./build/User/index.js",
+    "./Login": "./build/Login/index.js",
     "./Endpoint": "./build/Endpoint.js",
     "./Controller": "./build/Controller.js",
     "./Response": "./build/Response/index.js",
