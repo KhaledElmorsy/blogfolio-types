@@ -430,11 +430,10 @@ export const endPoints = {
   /**
    * Edit a user's data
    *
-   * `PUT ../:id`
+   * `PUT ../`
    */
   Put: {
     request: z.object({
-      params: id,
       body: Misc.partial(),
     }),
     response: responseGroup.updateUserData,
@@ -443,11 +442,10 @@ export const endPoints = {
   /**
    * Change a users's password
    *
-   * `PUT ../:id/password`
+   * `PUT ../password`
    */
   PutPassword: {
     request: z.object({
-      params: id,
       body: z.object({ password }),
     }),
     response: z.union([
@@ -460,11 +458,10 @@ export const endPoints = {
   /**
    * Change a users's email
    *
-   * `PUT ../:id/email`
+   * `PUT ../email`
    */
   PutEmail: {
     request: z.object({
-      params: id,
       body: z.object({ email }),
     }),
     response: responseGroup.updateUserData,
@@ -473,26 +470,24 @@ export const endPoints = {
   /**
    * Change a users's username
    *
-   * `PUT ../:id/username`
+   * `PUT ../username`
    */
   PutUsername: {
     request: z.object({
-      params: id,
       body: z.object({ username }),
     }),
     response: responseGroup.updateUserData,
   },
 
   /**
-   * Make a user follow another.
+   * Make the user follow a target user.
    *
-   * `PUT ../:id/followers/:followerId`
+   * `PUT ../followers/:targetId`
    */
   PutFollower: {
     request: z.object({
       params: z.object({
-        id: id.shape.id,
-        followerId: id.shape.id,
+        targetId: id.shape.id,
       }),
     }),
     response: z.union([
@@ -533,11 +528,10 @@ export const endPoints = {
   /**
    * Delete a user
    *
-   * `DELETE ../:id`
+   * `DELETE ../`
    */
   Delete: {
     request: z.object({
-      params: id,
     }),
     response: z.union([
       response.success.userDeleted,
@@ -546,15 +540,14 @@ export const endPoints = {
   },
 
   /**
-   * Remove a user from the target's followers.
+   * Remove a target user from the users's follow list.
    *
-   * `DELETE ../:id/followers/:followerId
+   * `DELETE ../follows/:targetId
    */
   DeleteFollow: {
     request: z.object({
       params: z.object({
-        id: id.shape.id,
-        followerId: id.shape.id,
+        targetId: id.shape.id,
       }),
     }),
     response: z.union([
