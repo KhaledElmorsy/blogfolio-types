@@ -7,11 +7,11 @@
   "exports": {
     ".": "./build/index.js",
     "./User": "./build/User/index.js",
-    "./Login": "./build/Login/index.js",
     "./Endpoint": "./build/Endpoint.js",
     "./Controller": "./build/Controller.js",
     "./Response": "./build/Response/index.js",
-    "./ResponseError": "./build/ResponseError/index.js"
+    "./ResponseError": "./build/ResponseError/index.js",
+    "./Authentication": "./build/Authentication/index.js"
   },
   "types": "build/index.d.ts",
   "repository": "git@github.com:KhaledElmorsy/blogfolio-types.git",

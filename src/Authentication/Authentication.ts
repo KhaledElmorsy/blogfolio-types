@@ -22,7 +22,7 @@ const endpoints = {
         zResponseError(errorIDs.User.UserNotFound),
       ]),
       zFailureResponse(ErrorCode.Forbidden, [
-        zResponseError(errorIDs.Login.IncorrectPassword),
+        zResponseError(errorIDs.Authentication.IncorrectPassword),
       ]),
       zSuccessResponse(SuccessCode.Ok),
     ]),
