@@ -6,6 +6,7 @@
   ],
   "exports": {
     ".": "./build/index.js",
+    "./Post": "./build/Post/index.js",
     "./User": "./build/User/index.js",
     "./Endpoint": "./build/Endpoint.js",
     "./Controller": "./build/Controller.js",

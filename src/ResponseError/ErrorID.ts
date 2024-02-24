@@ -2,6 +2,7 @@ import UserErrorIDs from '@/User/ErrorIDs';
 import QueryArrayErrorIDs from '@/util/schema/queryArray/ErrorIDs';
 import uniqueIDTree from './misc/uniqueIDTree';
 import AuthErrorIDs from '@/Authentication/ErrorIDs';
+import PostErrorIDs from '@/Post/ErrorIDs';
 import { BaseErrorID } from './misc';
 
 /**
@@ -33,6 +34,7 @@ const GeneralErrorIDs = {
  */
 const errorIDs = uniqueIDTree({
   User: UserErrorIDs,
+  Post: PostErrorIDs,
   Authentication: AuthErrorIDs,
   General: GeneralErrorIDs,
   Request: {

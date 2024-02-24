@@ -19,7 +19,7 @@ import { zWithErrors } from '@/util';
 /*                    COMPONENTS                         */
 /* ===================================================== */
 
-const __id = z.object({
+export const __id = z.object({
   /**
    * Internal primary key used in the database.
    * Shouldn't be returned by endpoints.
@@ -27,12 +27,12 @@ const __id = z.object({
   __id: z.string(),
 });
 
-const id = z.object({
+export const id = z.object({
   /** Public UID */
   id: z.string(),
 });
 
-const email = zWithErrors(
+export const email = zWithErrors(
   { type: errorIDs.User.WrongTypeEmail, invalid: errorIDs.User.InvalidEmail },
   ({ type, invalid }) =>
     z
@@ -48,7 +48,7 @@ const email = zWithErrors(
  * - No multiple adjacent periods.
  * - Doesn't start or end with a period.
  */
-const username = zWithErrors(
+export const username = zWithErrors(
   {
     type: errorIDs.User.WrongTypeUsername,
     short: errorIDs.User.ShortUsername,
@@ -75,7 +75,7 @@ const username = zWithErrors(
  *    - Numbers
  *    - Special Chars from ' ' - '/' (Ascii 32-47)
  */
-const password = zWithErrors(
+export const password = zWithErrors(
   {
     type: errorIDs.User.WrongTypePassword,
     short: errorIDs.User.ShortPassword,
@@ -102,7 +102,7 @@ const password = zWithErrors(
       )
 );
 
-const Misc = z.object({
+export const Misc = z.object({
   bio: zWithErrors(
     {
       type: errorIDs.User.WrongTypeBio,
@@ -147,7 +147,7 @@ const Misc = z.object({
   photoFull: z.string().nullable(),
 });
 
-const FollowCounts = z.object({
+export const FollowCounts = z.object({
   followerCount: z.number().int(),
   followingCount: z.number().int(),
 });
@@ -188,7 +188,7 @@ export type Resources = InferZodRecord<typeof resources>;
 /*                  COMMON RESPONSES                     */
 /* ===================================================== */
 
-const response = {
+export const response = {
   success: {
     foundUser: zSuccessResponse(
       SuccessCode.Ok,
@@ -377,7 +377,7 @@ export const endPoints = {
       response.failure.userIdNotFound,
     ]),
   },
-
+  // TODO Update doc. for the following two endpoints
   /**
    * Check if a user with the passed email/username exists
    *
