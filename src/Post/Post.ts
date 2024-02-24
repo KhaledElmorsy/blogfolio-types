@@ -94,7 +94,7 @@ const response = {
 /*                     ENDPOINTS                         */
 /* ===================================================== */
 
-const endpoints = {
+export const endpoints = {
   /**
    * Get the data of the post with the passed slug
    *
@@ -218,5 +218,3 @@ const endpoints = {
     response: z.union([response.failure.idNotFound, response.success.ok]),
   },
 } satisfies ControllerSchema<Controller>;
-
-export default endpoints;
