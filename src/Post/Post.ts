@@ -46,7 +46,7 @@ export const slug = zWithErrors(
 
 export const createdAt = z.date();
 export const editedAt = z.date().nullable();
-export const views = z.number().positive();
+export const views = z.number().min(0);
 export const visible = z.boolean();
 
 /* ===================================================== */
