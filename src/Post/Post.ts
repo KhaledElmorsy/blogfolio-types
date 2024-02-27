@@ -3,7 +3,7 @@ import { errorIDs, zResponseError } from '@/ResponseError';
 import { zWithErrors } from '@/util';
 import rules from './rules';
 import { ControllerSchema, Controller } from '@/Controller';
-import { id as userID, response as userResponses } from '@/User';
+import { id as userID, username, response as userResponses } from '@/User';
 import {
   ErrorCode,
   SuccessCode,
@@ -15,7 +15,7 @@ import {
 /*                    COMPONENTS                         */
 /* ===================================================== */
 
-export const uid = z.string();
+export const id = z.string();
 
 export const title = zWithErrors(
   { blank: errorIDs.Post.BlankTitle, long: errorIDs.Post.LongTitle },
@@ -25,7 +25,7 @@ export const title = zWithErrors(
 
 export const summary = zWithErrors(
   { long: errorIDs.Post.LongSummary },
-  ({ long }) => z.string().max(rules.MAX_SUMMARY_LENGTH, long)
+  ({ long }) => z.string().max(rules.MAX_SUMMARY_LENGTH, long).nullable()
 );
 
 export const body = zWithErrors({ long: errorIDs.Post.LongBody }, ({ long }) =>
@@ -47,15 +47,15 @@ export const slug = zWithErrors(
 export const createdAt = z.date();
 export const editedAt = z.date().nullable();
 export const views = z.number().positive();
+export const visible = z.boolean();
 
 /* ===================================================== */
 /*                 RESOURCES/HELPERS                     */
 /* ===================================================== */
 
-const postData = z.object({
-  post: z.object({
-    id: uid,
-    userID,
+export const postSchema = z
+  .object({
+    id,
     title,
     summary,
     body,
@@ -63,13 +63,18 @@ const postData = z.object({
     createdAt,
     editedAt,
     views,
-  }),
-});
+    visible
+  })
+  .and(z.object({ userID: userID.shape.id }));
 
 const pagination = z.object({
   limit: z.number().positive().optional(),
-  nextID: uid.optional(),
+  nextID: id.optional(),
 });
+
+const search = z.string().nonempty();
+
+const sortByDateViews = z.enum(['date', 'views']);
 
 /* ===================================================== */
 /*                  COMMON RESPONSES                     */
@@ -77,7 +82,11 @@ const pagination = z.object({
 
 const response = {
   success: {
-    postArray: zSuccessResponse(SuccessCode.Ok, z.array(postData)),
+    post: zSuccessResponse(SuccessCode.Ok, z.object({ post: postSchema })),
+    postArray: zSuccessResponse(
+      SuccessCode.Ok,
+      z.object({ posts: z.array(postSchema) })
+    ),
     ok: zSuccessResponse(SuccessCode.Ok),
   },
   failure: {
@@ -85,7 +94,7 @@ const response = {
       zResponseError(errorIDs.Post.UnavailableSlug, z.object({ slug })),
     ]),
     idNotFound: zFailureResponse(ErrorCode.NotFound, [
-      zResponseError(errorIDs.Post.NotFound, z.object({ id: uid })),
+      zResponseError(errorIDs.Post.NotFound, z.object({ id })),
     ]),
   },
 };
@@ -96,76 +105,110 @@ const response = {
 
 export const endpoints = {
   /**
-   * Get the data of the post with the passed slug
+   * Get the data of the post with the passed id
    *
-   * `GET ../:slug`
+   * `GET ../:id`
+   */
+  Get: {
+    request: z.object({
+      params: z.object({ id }),
+    }),
+    response: z.union([
+      response.success.post,
+      zFailureResponse(ErrorCode.NotFound, [
+        zResponseError(errorIDs.Post.NotFound, z.object({ id })),
+      ]),
+    ]),
+  },
+
+  /**
+   * Find the post by its slug (at a specific username).
+   *
+   * `GET ../:username/post/:slug`
    */
   GetBySlug: {
     request: z.object({
-      params: z.object({ slug }),
+      params: z.object({ username, slug }),
     }),
     response: z.union([
-      zSuccessResponse(SuccessCode.Ok, postData),
+      response.success.post,
       zFailureResponse(ErrorCode.NotFound, [
         zResponseError(errorIDs.Post.NotFound, z.object({ slug })),
       ]),
+      userResponses.failure.usernameNotFound,
     ]),
   },
 
   /**
-   * Get the data of the post with the passed ID (in the request query)
+   * Search for posts by their title | body | summary.
+   * * Pagination
+   * * Sort by date/views
    *
-   * `GET ../?id=xxx`
-   */
-  GetByID: {
-    request: z.object({
-      query: z.object({ id: uid }),
-    }),
-    response: z.union([
-      zSuccessResponse(SuccessCode.Ok, postData),
-      zFailureResponse(ErrorCode.NotFound, [
-        zResponseError(errorIDs.Post.NotFound, z.object({ id: uid })),
-      ]),
-    ]),
-  },
-
-  /**
-   * Search for posts by their title | body | author username
-   *
-   * `GET ../?search=xx`
+   * `GET ../?search=__&nextID=__&limit=__&sort=__`
    */
   GetSearch: {
     request: z.object({
       query: z
-        .object({
-          search: z.string().nonempty(),
-        })
+        .object({ search, sort: sortByDateViews.optional() })
         .and(pagination),
     }),
     response: response.success.postArray,
   },
 
   /**
-   * Get posts by their author's ID
+   * Get posts by their author's username.
+   * * Searchable
+   * * Pagination
+   * * Sort by date/views
    *
-   * `GET ../?userID=xx`
+   * `GET ../:username/post/?nextID=__&limit=__&sort=__`
    */
-  GetByUser: {
+  GetByUsername: {
     request: z.object({
-      query: z
-        .object({
-          userID,
+      params: z.object({
+        username,
+      }),
+      query: pagination.and(
+        z.object({
+          search: search.optional(),
+          sort: sortByDateViews.optional(),
         })
-        .and(pagination),
+      ),
     }),
     response: z.union([
-      userResponses.failure.userIdNotFound,
+      userResponses.failure.usernameNotFound,
       response.success.postArray,
     ]),
   },
 
   /**
-   * Create a new post
+   * Get all posts by a logged in user. Similar to a dashboard.
+   * * Requires authorization
+   * * Can get hidden posts/drafts (defaults to visible posts)
+   * * Searchable
+   * * Supports pagination
+   *
+   * `GET ../post/?nextID=__&limit=__&search=__&drafts=__&sort=__` ⬅️ While logged in
+   */
+  GetByUserID: {
+    request: z.object({
+      query: z
+        .object({
+          search: search.optional(),
+          drafts: z.boolean().optional(),
+          sort: sortByDateViews.optional(),
+        })
+        .and(pagination),
+    }),
+    response: z.union([
+      zFailureResponse(ErrorCode.Unauthorized),
+      response.success.postArray,
+    ]),
+  },
+
+  /**
+   * Create a new post.
+   * * Requires authorization.
    *
    * `POST ../`
    */
@@ -175,31 +218,35 @@ export const endpoints = {
         title,
         body,
         summary: summary.optional(),
-        slug: slug.optional(),
+        slug,
+        visible: visible.optional(),
       }),
     }),
     response: z.union([
+      zFailureResponse(ErrorCode.Unauthorized),
       response.failure.slugUnavailable,
-      zSuccessResponse(SuccessCode.Created, z.object({ id: uid })),
+      zSuccessResponse(SuccessCode.Created, z.object({ id })),
     ]),
   },
 
   /**
    * Update a post's data
-   *
+   * * Requires authorization
    * `PUT ../:id`
    */
   Put: {
     request: z.object({
-      param: z.object({ id: uid }),
+      params: z.object({ id }),
       body: z.object({
         title: title.optional(),
         body: body.optional(),
         summary: summary.optional(),
         slug: slug.optional(),
+        visible: visible.optional(),
       }),
     }),
     response: z.union([
+      zFailureResponse(ErrorCode.Unauthorized),
       response.failure.slugUnavailable,
       response.failure.idNotFound,
       response.success.ok,
@@ -207,14 +254,36 @@ export const endpoints = {
   },
 
   /**
-   * Delete the post with the input ID
+   * Increment a post's views.
    *
+   * Better to do it through the client than by each GET call especially
+   * since GET should have no side effects.
+   *
+   * `PUT ../:id/view`
+   */
+  PutView: {
+    request: z.object({
+      params: z.object({ id }),
+    }),
+    response: z.union([
+      response.success.ok,
+      response.failure.idNotFound,
+    ]),
+  },
+
+  /**
+   * Delete the post with the input ID
+   * * Requires authorization
    * `DELETE ../:id`
    */
   Delete: {
     request: z.object({
-      params: z.object({ id: uid }),
+      params: z.object({ id }),
     }),
-    response: z.union([response.failure.idNotFound, response.success.ok]),
+    response: z.union([
+      zFailureResponse(ErrorCode.Unauthorized),
+      response.failure.idNotFound,
+      response.success.ok,
+    ]),
   },
 } satisfies ControllerSchema<Controller>;
