@@ -258,6 +258,9 @@ export const response = {
     newPasswordNotDifferent: zFailureResponse(ErrorCode.Conflict, [
       zResponseError(errorIDs.User.SamePassword),
     ]),
+    usernameNotFound: zFailureResponse(ErrorCode.NotFound, [
+      zResponseError(errorIDs.User.UserNotFound, z.object({ username })),
+    ]),
   },
 };
 
@@ -531,8 +534,7 @@ export const endPoints = {
    * `DELETE ../`
    */
   Delete: {
-    request: z.object({
-    }),
+    request: z.object({}),
     response: z.union([
       response.success.userDeleted,
       response.failure.userIdNotFound,
