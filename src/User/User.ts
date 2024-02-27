@@ -190,6 +190,7 @@ export type Resources = InferZodRecord<typeof resources>;
 
 export const response = {
   success: {
+    ok: zSuccessResponse(SuccessCode.Ok),
     foundUser: zSuccessResponse(
       SuccessCode.Ok,
       z.object({ user: QueriedUser })
@@ -428,6 +429,17 @@ export const endPoints = {
       query: userListQuery,
     }),
     response: responseGroup.userList,
+  },
+
+  /**
+   * Basic username parent route
+   * `GET../users/:username/(posts|comments|etc)`
+   */
+  GetUsername: {
+    request: z.object({
+      params: z.object({ username }),
+    }),
+    response: z.union([response.failure.usernameNotFound, response.success.ok]),
   },
 
   /**
