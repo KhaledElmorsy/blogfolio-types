@@ -80,7 +80,7 @@ const sortByDateViews = z.enum(['date', 'views']);
 /*                  COMMON RESPONSES                     */
 /* ===================================================== */
 
-const response = {
+export const response = {
   success: {
     post: zSuccessResponse(SuccessCode.Ok, z.object({ post: postSchema })),
     postArray: zSuccessResponse(
@@ -95,6 +95,9 @@ const response = {
     ]),
     idNotFound: zFailureResponse(ErrorCode.NotFound, [
       zResponseError(errorIDs.Post.NotFound, z.object({ id })),
+    ]),
+    slugNotFound: zFailureResponse(ErrorCode.NotFound, [
+      zResponseError(errorIDs.Post.NotFound, z.object({ slug })),
     ]),
   },
 };
@@ -132,9 +135,7 @@ export const endpoints = {
     }),
     response: z.union([
       response.success.post,
-      zFailureResponse(ErrorCode.NotFound, [
-        zResponseError(errorIDs.Post.NotFound, z.object({ slug })),
-      ]),
+      response.failure.slugNotFound,
       userResponses.failure.usernameNotFound,
     ]),
   },

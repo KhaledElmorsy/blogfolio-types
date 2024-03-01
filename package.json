@@ -8,6 +8,7 @@
     ".": "./build/index.js",
     "./Post": "./build/Post/index.js",
     "./User": "./build/User/index.js",
+    "./Comment": "./build/Comment/index.js",
     "./Endpoint": "./build/Endpoint.js",
     "./Controller": "./build/Controller.js",
     "./Response": "./build/Response/index.js",
