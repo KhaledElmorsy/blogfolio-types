@@ -63,7 +63,7 @@ export const postSchema = z
     createdAt,
     editedAt,
     views,
-    visible
+    visible,
   })
   .and(z.object({ userID: userID.shape.id }));
 
@@ -208,6 +208,24 @@ export const endpoints = {
   },
 
   /**
+   * Basic posts parent route middleware.
+   *
+   * Confirms whether the username/slug combination exists and goes to child
+   * endpoints if they do or responds with a 404 if they don't.
+   *
+   * `users/:username/posts/:slug/(children)`
+   */
+  CheckSlug: {
+    request: z.object({
+      params: z.object({
+        username,
+        slug,
+      }),
+    }),
+    response: response.failure.slugNotFound,
+  },
+
+  /**
    * Create a new post.
    * * Requires authorization.
    *
@@ -266,10 +284,7 @@ export const endpoints = {
     request: z.object({
       params: z.object({ id }),
     }),
-    response: z.union([
-      response.success.ok,
-      response.failure.idNotFound,
-    ]),
+    response: z.union([response.success.ok, response.failure.idNotFound]),
   },
 
   /**

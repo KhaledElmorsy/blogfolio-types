@@ -432,14 +432,19 @@ export const endPoints = {
   },
 
   /**
-   * Basic username parent route
-   * `GET../users/:username/(posts|comments|etc)`
+   * Basic username parent route middleware.
+   *
+   * Confirms whether the username belongs to an existing account.
+   * Responds with 404 if the username isnt found, otherwise passes to child
+   * routes.
+   *
+   * `GET../users/:username/posts/` for example
    */
-  GetUsername: {
+  CheckUsername: {
     request: z.object({
       params: z.object({ username }),
     }),
-    response: z.union([response.failure.usernameNotFound, response.success.ok]),
+    response: response.failure.usernameNotFound,
   },
 
   /**
