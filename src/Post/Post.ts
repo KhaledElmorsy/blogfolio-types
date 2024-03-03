@@ -96,6 +96,9 @@ export const response = {
     idNotFound: zFailureResponse(ErrorCode.NotFound, [
       zResponseError(errorIDs.Post.NotFound, z.object({ id })),
     ]),
+    multipleIDsNotFound: zFailureResponse(ErrorCode.NotFound, [
+      zResponseError(errorIDs.Post.NotFound, z.object({ ids: z.array(id) })),
+    ]),
     slugNotFound: zFailureResponse(ErrorCode.NotFound, [
       zResponseError(errorIDs.Post.NotFound, z.object({ slug })),
     ]),

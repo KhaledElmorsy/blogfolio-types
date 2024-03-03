@@ -69,6 +69,9 @@ export const response = {
     IdNotFound: zFailureResponse(ErrorCode.NotFound, [
       zResponseError(errorIDs.Comment.NotFound, z.object({ id })),
     ]),
+    multipleIDsNotFound: zFailureResponse(ErrorCode.NotFound, [
+      zResponseError(errorIDs.Comment.NotFound, z.object({ ids: z.array(id) })),
+    ]),
     blankBody: zFailureResponse(ErrorCode.BadRequest, [
       zResponseError(errorIDs.Comment.BodyBlank),
     ]),
