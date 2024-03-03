@@ -104,45 +104,9 @@ export const endpoints = {
   },
 
   /**
-   * Get a user's emote for a specific post.
-   *
-   * `GET ../post/:postID/user/:userID
-   */
-  GetUserPostEmote: {
-    request: z.object({
-      params: z.object({
-        postID,
-        userID,
-      }),
-    }),
-    response: z.union([
-      postResponses.failure.idNotFound,
-      userResponses.failure.userIdNotFound,
-      response.success.postEmote,
-    ]),
-  },
-
-  /**
-   * Get a user's emote for a specific comment.
-   *
-   * `GET ../comment/:commentID/user/:userID
-   */
-  GetUserCommentEmote: {
-    request: z.object({
-      params: z.object({
-        commentID,
-        userID,
-      }),
-    }),
-    response: z.union([
-      commentResponses.failure.IdNotFound,
-      userResponses.failure.userIdNotFound,
-      response.success.postEmote,
-    ]),
-  },
-
-  /**
    * Get user emotes for an array of post IDs.
+   *
+   * Optionally filter the emotes for a specific user.
    *
    * Using POST to send a JSON with a potentially large ID array.
    *
@@ -152,16 +116,20 @@ export const endpoints = {
     request: z.object({
       body: z.object({
         ids: z.array(postID),
+        userID: userID.optional(),
       }),
     }),
     response: z.union([
       postResponses.failure.multipleIDsNotFound,
+      userResponses.failure.userIdNotFound,
       response.success.postListEmotes,
     ]),
   },
 
   /**
    * Get user emotes for an array of comment IDs.
+   *
+   * Optionally filter the emotes for a specific user.
    *
    * Using POST to send a JSON with a potentially large ID array.
    *
@@ -171,10 +139,12 @@ export const endpoints = {
     request: z.object({
       body: z.object({
         ids: z.array(commentID),
+        userID: userID.optional(),
       }),
     }),
     response: z.union([
       commentResponses.failure.multipleIDsNotFound,
+      userResponses.failure.userIdNotFound,
       response.success.commentListEmotes,
     ]),
   },
