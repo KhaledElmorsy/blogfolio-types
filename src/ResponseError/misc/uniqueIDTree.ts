@@ -76,7 +76,7 @@ export default function uniqueIDTree<
         { 'Duplicate Codes': { [x in keyof DCode]: DCode[x] } },
         { 'Duplicate Messages': { [x in keyof DMessage]: DMessage[x] } }
       ]
-    : [never, 'Leaves must satisfy type Record<string, BaseResponseErrors>']
+    : [never, 'Leaves must satisfy type Record<string, BaseErrorID>']
 ) {
   return errorMap;
 }
