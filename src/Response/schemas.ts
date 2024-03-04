@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SuccessResponse, FailureResponse, ResponseBodyStatus } from './types';
+import { SuccessResponse, FailureResponse } from './types';
 import { ErrorCode, SuccessCode } from './status-codes';
 import { ErrorID, zResponseError } from '@/ResponseError';
 
@@ -14,13 +14,15 @@ export function zSuccessResponse<T extends SuccessCode, D extends z.ZodTypeAny>(
   code: T,
   data?: D
 ) {
-  return z.object({
-    status: z.literal(code),
-    body: z.object({
-      status: z.literal(ResponseBodyStatus.success),
-      data: data ?? z.undefined(),
-    }),
-  }) as any;
+  return data === undefined
+    ? (z.object({
+      status: z.literal(code),
+      body: z.object({}),
+    }) as z.ZodType<SuccessResponse<T>>)
+    : z.object({
+      status: z.literal(code),
+      body: data,
+    });
 }
 
 export function zFailureResponse<
@@ -43,7 +45,6 @@ export function zFailureResponse<
   return z.object({
     status: z.literal(code),
     body: z.object({
-      status: z.literal(ResponseBodyStatus.failure),
       errors: errorArray,
     }),
   }) as z.ZodType<FailureResponse<T, z.infer<E[number]>[]>>;

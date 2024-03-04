@@ -1,32 +1,25 @@
 import { SuccessCode, ErrorCode } from './status-codes';
 import type { ErrorID, ResponseError } from '@/ResponseError';
 
-export enum ResponseBodyStatus {
-  success = 'success',
-  failure = 'failure',
+export interface Response {
+  status: SuccessCode | ErrorCode;
+  body: Object;
 }
 
 export interface SuccessResponse<
-  S extends SuccessCode,
-  D extends object | undefined = undefined
-> {
-  status: S;
-  body: {
-    status: ResponseBodyStatus.success;
-  } & (D extends undefined ? {} : { data: D });
+  T extends SuccessCode = SuccessCode,
+  D extends Object | undefined = undefined
+> extends Response {
+  status: T;
+  body: D extends undefined ? {} : D;
 }
 
 export interface FailureResponse<
-  S extends ErrorCode,
-  T extends ResponseError<ErrorID, object | undefined>[] = []
-> {
-  status: S;
+  T extends ErrorCode = ErrorCode,
+  E extends undefined | ResponseError<ErrorID>[] = undefined
+> extends Response {
+  status: T;
   body: {
-    status: ResponseBodyStatus.failure;
-    errors: T;
+    errors: E extends undefined ? [] : E;
   };
 }
-
-export type Response =
-  | SuccessResponse<SuccessCode, object | undefined>
-  | FailureResponse<ErrorCode, ResponseError<ErrorID, object | undefined>[]>;
