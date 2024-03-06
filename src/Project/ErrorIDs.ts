@@ -35,6 +35,6 @@ const ErrorIDs = {
     code: 606,
     message: 'Project priority can only be positive integers'
   }
-} satisfies Record<string, BaseErrorID>;
+} as const satisfies Record<string, BaseErrorID>;
 
 export default ErrorIDs;
