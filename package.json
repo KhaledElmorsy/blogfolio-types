@@ -9,6 +9,7 @@
     "./Post": "./build/Post/index.js",
     "./Emote": "./build/Emote/index.js",
     "./User": "./build/User/index.js",
+    "./Project": "./build/Project/index.js",
     "./Comment": "./build/Comment/index.js",
     "./Endpoint": "./build/Endpoint.js",
     "./Controller": "./build/Controller.js",

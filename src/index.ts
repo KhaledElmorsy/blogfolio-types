@@ -6,3 +6,4 @@ export * as Authentication from './Authentication';
 export * as Comment from './Comment';
 export * as Post from './Post';
 export * as Emote from './Emote';
+export * as Project from './Project';

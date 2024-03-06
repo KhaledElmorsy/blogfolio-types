@@ -5,6 +5,7 @@ import AuthErrorIDs from '@/Authentication/ErrorIDs';
 import PostErrorIDs from '@/Post/ErrorIDs';
 import CommentErrorIDs from '@/Comment/ErrorIDs';
 import EmoteErrorIDs from '@/Emote/ErrorIDs';
+import ProjectErrorIDs from '@/Project/ErrorIDs';
 import { BaseErrorID } from './misc';
 
 /**
@@ -41,6 +42,7 @@ const errorIDs = uniqueIDTree({
   Authentication: AuthErrorIDs,
   Emote: EmoteErrorIDs,
   General: GeneralErrorIDs,
+  Project: ProjectErrorIDs,
   Request: {
     QueryArray: QueryArrayErrorIDs,
   },
