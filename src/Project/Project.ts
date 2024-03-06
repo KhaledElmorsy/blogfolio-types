@@ -44,11 +44,12 @@ export const prioritySchema = zWithErrors(
 /* ===================================================== */
 
 export const projectSchema = z.object({
+  name: nameSchema,
   projectID: idSchema,
   description: descriptionSchema,
   skills: skillsSchema,
   userID: userIDSchema,
-  priority: prioritySchema
+  priority: prioritySchema,
 });
 
 export type Project = z.infer<typeof projectSchema>;
@@ -74,6 +75,7 @@ const response = {
         z.object({ projectID: idSchema })
       ),
     ]),
+    unauthorized: zFailureResponse(ErrorCode.Unauthorized),
   },
 };
 
@@ -119,11 +121,16 @@ export const endpoints = {
    */
   Post: {
     request: z.object({
-      body: projectSchema,
+      body: z.object({
+        description: descriptionSchema,
+        name: nameSchema,
+        skills: skillsSchema,
+        priority: prioritySchema,
+      }),
     }),
     response: z.union([
       response.success.projectCreated,
-      userResponse.failure.userIdNotFound,
+      response.failure.unauthorized,
     ]),
   },
 
@@ -135,12 +142,18 @@ export const endpoints = {
    */
   Put: {
     request: z.object({
-      body: projectSchema,
+      body: z.object({
+        projectID: idSchema,
+        description: descriptionSchema.optional(),
+        name: nameSchema.optional(),
+        skills: skillsSchema.optional(),
+        priority: prioritySchema.optional(),
+      }),
     }),
     response: z.union([
       response.success.ok,
       response.failure.notFound,
-      userResponse.failure.userIdNotFound,
+      response.failure.unauthorized,
     ]),
   },
 
@@ -154,6 +167,10 @@ export const endpoints = {
     request: z.object({
       params: z.object({ projectID: idSchema }),
     }),
-    response: z.union([response.success.ok, response.failure.notFound]),
+    response: z.union([
+      response.success.ok,
+      response.failure.notFound,
+      response.failure.unauthorized,
+    ]),
   },
 } satisfies ControllerSchema<Controller>;
