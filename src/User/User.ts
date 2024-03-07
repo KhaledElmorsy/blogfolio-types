@@ -381,13 +381,11 @@ export const endPoints = {
       response.failure.userIdNotFound,
     ]),
   },
-  // TODO Update doc. for the following two endpoints
+
   /**
-   * Check if a user with the passed email/username exists
+   * Check if a user with the passed email exists
    *
-   * `GET ../exists/:field/:value`
-   *
-   * Field: `"email"|"username"`
+   * `GET ../t/exists/email/:value`
    */
   GetExistsEmail: {
     request: z.object({
@@ -396,6 +394,11 @@ export const endPoints = {
     response: response.success.boolean,
   },
 
+  /**
+   * Check if a user with the passed username exists
+   *
+   * `GET ../t/exists/username/:value`
+   */
   GetExistsUsername: {
     request: z.object({
       params: z.object({ username }),
@@ -420,6 +423,8 @@ export const endPoints = {
 
   /**
    * Search for users based on their username, first name, or last name.
+   *
+   * `../s/any/:text`
    */
   GetSearchAny: {
     request: z.object({
@@ -546,7 +551,7 @@ export const endPoints = {
   },
 
   /**
-   * Delete a user
+   * Delete the logged in user
    *
    * `DELETE ../`
    */
@@ -561,7 +566,7 @@ export const endPoints = {
   /**
    * Remove a target user from the users's follow list.
    *
-   * `DELETE ../follows/:targetId
+   * `DELETE ../follows/:targetId`
    */
   DeleteFollow: {
     request: z.object({
