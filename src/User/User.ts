@@ -262,6 +262,7 @@ export const response = {
     usernameNotFound: zFailureResponse(ErrorCode.NotFound, [
       zResponseError(errorIDs.User.UserNotFound, z.object({ username })),
     ]),
+    unauthorized: zFailureResponse(ErrorCode.Unauthorized)
   },
 };
 
@@ -434,6 +435,19 @@ export const endPoints = {
       query: userListQuery,
     }),
     response: responseGroup.userList,
+  },
+
+  /**
+   * Get the logged in user's data
+   *
+   * `../me/`
+   */
+  GetMe: {
+    request: z.object({}),
+    response: z.union([
+      response.success.foundUser,
+      response.failure.unauthorized
+    ])
   },
 
   /**
