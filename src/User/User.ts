@@ -272,6 +272,7 @@ const responseGroup = {
     response.failure.userIdNotFound,
   ]),
   updateUserData: z.union([
+    response.failure.unauthorized,
     response.success.userDataUpdated,
     response.failure.userIdNotFound,
     response.failure.userFieldConflict,
@@ -491,6 +492,7 @@ export const endPoints = {
       response.success.userDataUpdated,
       response.failure.newPasswordNotDifferent,
       response.failure.userIdNotFound,
+      response.failure.unauthorized
     ]),
   },
 
@@ -533,6 +535,7 @@ export const endPoints = {
       response.success.followerAdded,
       response.failure.userIdNotFound,
       response.failure.userAlreadyFollows,
+      response.failure.unauthorized
     ]),
   },
 
@@ -546,6 +549,7 @@ export const endPoints = {
       response.success.userActivated,
       response.failure.userArealdyActivated,
       response.failure.userIdNotFound,
+      response.failure.unauthorized
     ]),
   },
 
@@ -574,6 +578,7 @@ export const endPoints = {
     response: z.union([
       response.success.userDeleted,
       response.failure.userIdNotFound,
+      response.failure.unauthorized
     ]),
   },
 
@@ -592,6 +597,7 @@ export const endPoints = {
       response.success.followerRemoved,
       response.failure.userNotFollowing,
       response.failure.userIdNotFound,
+      response.failure.unauthorized
     ]),
   },
 } satisfies ControllerSchema<Controller>;
