@@ -31,6 +31,16 @@ const userID = userIDObject.shape.id;
 
 const baseKey = z.object({ userID, emoteID: id });
 
+const postEmoteCounts = z.record(
+  postID,
+  z.array(z.object({ emoteID: id, count: z.number() }))
+);
+
+const commentEmoteCounts = z.record(
+  commentID,
+  z.array(z.object({ emoteID: id, count: z.number() }))
+);
+
 /* ===================================================== */
 /*                   COMMON RESPONSES                    */
 /* ===================================================== */
@@ -61,6 +71,8 @@ const response = {
       SuccessCode.Ok,
       z.array(baseKey.and(z.object({ commentID })))
     ),
+    postEmoteCounts: zSuccessResponse(SuccessCode.Ok, postEmoteCounts),
+    commentEmoteCounts: zSuccessResponse(SuccessCode.Ok, commentEmoteCounts),
   },
   failure: {
     IDNotFound: zFailureResponse(ErrorCode.NotFound, [
@@ -146,6 +158,40 @@ export const endpoints = {
       commentResponses.failure.multipleIDsNotFound,
       userResponses.failure.userIdNotFound,
       response.success.commentListEmotes,
+    ]),
+  },
+
+  /**
+   * Get the aggregate count of each emote on the passed post IDs
+   *
+   * `POST ../post/get/counts`
+   */
+  PostGetPostEmoteCounts: {
+    request: z.object({
+      body: z.object({
+        postIDs: z.array(postID),
+      }),
+    }),
+    response: z.union([
+      response.success.postEmoteCounts,
+      postResponses.failure.multipleIDsNotFound,
+    ]),
+  },
+
+  /**
+   * Get the aggregate count of each emote on the passed comment IDs
+   *
+   * `POST ../comment/get/counts`
+   */
+  PostGetCommentEmoteCounts: {
+    request: z.object({
+      body: z.object({
+        commentIDs: z.array(commentID),
+      }),
+    }),
+    response: z.union([
+      response.success.commentEmoteCounts,
+      commentResponses.failure.multipleIDsNotFound,
     ]),
   },
 
