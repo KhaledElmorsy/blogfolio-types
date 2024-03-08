@@ -193,7 +193,7 @@ export const endpoints = {
    * * Searchable
    * * Supports pagination
    *
-   * `GET ../post/?nextID=__&limit=__&search=__&drafts=__&sort=__` ⬅️ While logged in
+   * `GET ../me/?nextID=__&limit=__&search=__&drafts=__&sort=__` ⬅️ While logged in
    */
   GetByUserID: {
     request: z.object({
