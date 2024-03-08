@@ -53,19 +53,18 @@ export const visible = z.boolean();
 /*                 RESOURCES/HELPERS                     */
 /* ===================================================== */
 
-export const postSchema = z
-  .object({
-    id,
-    title,
-    summary,
-    body,
-    slug,
-    createdAt,
-    editedAt,
-    views,
-    visible,
-  })
-  .and(z.object({ userID: userID.shape.id }));
+export const postSchema = z.object({
+  id,
+  title,
+  summary,
+  body,
+  slug,
+  createdAt,
+  editedAt,
+  views,
+  visible,
+  userID: userID.shape.id,
+});
 
 const pagination = z.object({
   limit: z.number().positive().optional(),
@@ -85,7 +84,9 @@ export const response = {
     post: zSuccessResponse(SuccessCode.Ok, z.object({ post: postSchema })),
     postArray: zSuccessResponse(
       SuccessCode.Ok,
-      z.object({ posts: z.array(postSchema) })
+      z.object({
+        posts: z.array(postSchema.omit({ visible: true, body: true })),
+      })
     ),
     ok: zSuccessResponse(SuccessCode.Ok),
   },
