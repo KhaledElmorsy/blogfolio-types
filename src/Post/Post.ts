@@ -200,7 +200,11 @@ export const endpoints = {
       query: z
         .object({
           search: search.optional(),
-          drafts: z.boolean().optional(),
+          drafts: z
+            .enum(['true', 'false'])
+            .transform((value) => value === 'true')
+            .pipe(z.boolean())
+            .optional(),
           sort: sortByDateViews.optional(),
         })
         .and(pagination),
