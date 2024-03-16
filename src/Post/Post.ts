@@ -67,7 +67,7 @@ export const postSchema = z.object({
 });
 
 const pagination = z.object({
-  limit: z.number().positive().optional(),
+  limit: z.coerce.number().positive().optional(),
   nextID: id.optional(),
 });
 

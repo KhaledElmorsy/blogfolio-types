@@ -45,11 +45,11 @@ export const comment = z.object({
 });
 
 const pagination = z.object({
-  limit: z.number().positive().optional(),
+  limit: z.coerce.number().optional(),
   nextID: id.optional(),
 });
 
-const popular = z.boolean();
+const popular = z.coerce.boolean();
 
 /* ===================================================== */
 /*                  COMMON RESPONSES                     */
