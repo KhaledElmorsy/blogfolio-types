@@ -22,17 +22,17 @@ export const idSchema = z.string();
 export const nameSchema = zWithErrors(
   { blank: errorIDs.Project.nameBlank, long: errorIDs.Project.nameTooLong },
   ({ blank, long }) =>
-    z.string().min(0, blank).max(rules.MAX_PROJECT_NAME, long)
+    z.string().min(1, blank).max(rules.MAX_PROJECT_NAME, long)
 );
 
 export const descriptionSchema = zWithErrors(
   { blank: errorIDs.Project.descriptionBlank },
-  ({ blank }) => z.string().min(0, blank)
+  ({ blank }) => z.string().min(1, blank)
 );
 
 export const skillsSchema = zWithErrors(
   { blank: errorIDs.Project.skillBlank },
-  ({ blank }) => z.array(z.string().min(0, blank))
+  ({ blank }) => z.array(z.string().min(1, blank))
 );
 
 export const prioritySchema = zWithErrors(
