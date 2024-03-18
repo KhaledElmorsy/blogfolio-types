@@ -23,9 +23,14 @@ export function parseErrorID<T extends ErrorIDString>(
 export function parseErrorID(errorIDString: string): ErrorID;
 export function parseErrorID<T extends ErrorIDString>(errorIDString: T) {
   const format = /^\d+\|.+$/;
+  const validErrorIDString = format.test(errorIDString);
 
-  if (!format.test(errorIDString)) {
-    throw new Error(`Cannot parse invalid error ID string: ${errorIDString}`);
+  if (!validErrorIDString) {
+    console.warn(`Cannot parse invalid error ID string: ${errorIDString}`);
+    return {
+      code: 9999,
+      message: errorIDString,
+    };
   }
 
   const [code, message] = errorIDString.split(/(?<=^\d+)\|/);
