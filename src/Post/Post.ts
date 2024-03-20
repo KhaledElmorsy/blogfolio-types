@@ -71,7 +71,7 @@ const pagination = z.object({
   nextID: id.optional(),
 });
 
-const search = z.string().nonempty();
+const search = z.string();
 
 const sortByDateViews = z.enum(['date', 'views']);
 
