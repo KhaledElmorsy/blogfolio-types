@@ -52,7 +52,7 @@ src/
 │   ├── ErrorIDs.ts       # Domain-specific base error code/message definitions
 │   └── index.ts          # Clean exports
 ├── Response/             # Base types/schemas for HTTP Responses and Status Code Enums
-├── ResponseError/        # Error serialization logic and the uniqueIDTree compiler
+├── ResponseError/        # Error serialization logic and the uniqueIDTree Strict Type Constraint System
 ├── util/                 # Advanced TS generic helpers (InferZodRecord, UnionToIntersection)
 └── index.ts              # Global package entry point
 ```
